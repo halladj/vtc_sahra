@@ -3,12 +3,17 @@ import bcrypt from 'bcrypt';
 import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, revokeTokens } from './auth.services';
 import { createUserByEmailAndPassword, findUserByEmail, findUserById } from '../user/user.services';
 import { generateTokens } from '../../utils/jwt';
+import { Role } from '../../generated/prisma';
+import { upload } from '../../middlewares';
 
 const router = express.Router();
 
-router.post('/register', async (req, res, next) => {
+router.post(
+  '/register',
+  upload.single('photo'), 
+  async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password,  address } = req.body;
     if (!email || !password) {
       res.status(400);
       throw new Error('You must provide an email and a password.');
@@ -20,8 +25,15 @@ router.post('/register', async (req, res, next) => {
       res.status(400);
       throw new Error('Email already in use.');
     }
+    const photoUrl = req.file ? `/uploads/users/${req.file.filename}` : null;
 
-    const user = await createUserByEmailAndPassword({ email, password });
+    const user = await createUserByEmailAndPassword({
+       email, 
+       password,
+       role: Role.USER,
+       photo: photoUrl? photoUrl : "",
+       address
+      });
     const { accessToken, refreshToken } = generateTokens(user);
     await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
 

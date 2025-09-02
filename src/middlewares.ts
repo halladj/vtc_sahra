@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { Role } from "./generated/prisma";
+import multer from 'multer';
+import path from 'path';
+import { v4 as uuid } from 'uuid';
+
 
 
 
@@ -46,3 +51,27 @@ export function isAuthenticated(req:AuthenticatedRequest, res:Response, next:Nex
 
   return next();
 }
+
+function requireRole(...allowedRoles: Role[]) {
+  return (req: any, res:Response, next:NextFunction) => {
+    const userRole = req.user.role;
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    next();
+  };
+}
+
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../uploads/users')); // go 2 levels up
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+export const upload = multer({ storage });
