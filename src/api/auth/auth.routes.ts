@@ -1,10 +1,13 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, revokeTokens } from './auth.services';
-import { createUserByEmailAndPassword, findUserByEmail, findUserById } from '../user/user.services';
+import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, revokeTokens, createPasswordResetToken, findPasswordResetToken, deletePasswordResetToken } from './auth.services';
+import { createUserByEmailAndPassword, findUserByEmail, findUserById, updateUsersPassword } from '../user/user.services';
 import { generateTokens } from '../../utils/jwt';
-import { Role } from '../../generated/prisma';
+import { Role, VehicleType } from '../../generated/prisma';
 import { upload } from '../../middlewares';
+import { createDriverByEmailAndPassword } from '../driver/driver.services';
+import crypto from "crypto";
+
 
 const router = express.Router();
 
@@ -45,6 +48,62 @@ router.post(
     next(err);
   }
 });
+
+
+router.post(
+  '/register-driver', 
+  upload.single('photo'), 
+  async (req, res, next) => {
+    try {
+      const { 
+        email, 
+        password,
+        address,
+        vehicleType ,
+        vehicleModel ,
+        vehicleYear ,
+        vehicleplate,
+      } = req.body;
+      if (!email || !password) {
+        res.status(400);
+        throw new Error('You must provide an email and a password.');
+      } 
+      //TODO: is Vehicle validation a need on backend ?.
+
+      const existingUser = await findUserByEmail(email);
+      if (existingUser) {
+        res.status(400);
+        throw new Error('Email already in use.');
+      }
+
+      const photoUrl = req.file ? `/uploads/users/${req.file.filename}` : null;
+      const driver = await createDriverByEmailAndPassword({
+        email,
+        password,
+        address,
+       photo: photoUrl? photoUrl : "",
+       vehicle: {
+        type: VehicleType.CAR,
+        model: vehicleModel,
+        year: Number(vehicleYear),
+        plate: vehicleplate
+       }
+
+      });
+      const { accessToken, refreshToken } = generateTokens(driver);
+      await addRefreshTokenToWhitelist({ refreshToken, userId: driver.id });
+
+      res.json({
+        accessToken,
+        refreshToken,
+      });
+
+    } catch (error) {
+      next(error)
+    }
+  }
+ 
+)
 
 router.post('/login', async (req, res, next) => {
   try {
@@ -134,6 +193,72 @@ router.post('/revokeRefreshTokens', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+
+router.post("/forgot-password", async (req,res,next) => {
+    try{
+
+      const { email } = req.body;
+
+      const user = await findUserByEmail(email); 
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 min expiry
+      await createPasswordResetToken(
+        token, 
+        user.id,
+        expiresAt
+      )
+
+      //TODO: send token via email.
+      console.log(`Reset link: http://localhost:3000/reset-password?token=${token}`);
+
+      res.json({ 
+        message: "Reset link sent to email (check console for now)" 
+      });
+    }catch(err){
+      next(err);
+    }
+});
+
+
+router.post("/reset-password", async (req, res,next ) => {
+  const { token, newPassword } = req.body;
+
+  const resetToken = await findPasswordResetToken(token);
+  if (!resetToken) {
+    return res.status(400).json({ error: "Invalid token" });
+  }
+
+  if (resetToken.expiresAt < new Date()) {
+    return res.status(400).json({ error: "Token expired" });
+  }
+
+  // hash password
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  const user = await findUserById(resetToken.userId);
+  const pwd = user?.password;
+  const isSamePassword = await bcrypt.compare(
+    newPassword, 
+    pwd ? pwd : ""
+  );
+  if (isSamePassword){
+    return res.status(400).json({ 
+    error: "Must use a different password`" 
+    });
+  }
+
+  await updateUsersPassword(
+    resetToken.userId, hashedPassword
+  );
+  // remove token so it can’t be reused
+  await deletePasswordResetToken(token);
+
+  res.json({ message: "Password reset successfully" });
 });
 
 export = router;

@@ -78,6 +78,8 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+
+  PasswordResetToken PasswordResetToken[]
 }
 
 model RefreshToken {
@@ -242,4 +244,15 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      User @relation(fields: [userId], references: [id])
+}
+
+
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

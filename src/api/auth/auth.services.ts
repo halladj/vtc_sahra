@@ -43,3 +43,25 @@ export function revokeTokens(userId:any) {
     },
   });
 }
+
+export function createPasswordResetToken(
+  token:string,
+  userId: string,
+  expiresAt: Date
+){
+  return db.passwordResetToken.create({
+    data: { token, userId, expiresAt },
+  });
+}
+
+export function findPasswordResetToken(token:string) {
+  return db.passwordResetToken.findFirst({
+    where: {token}
+  });
+}
+
+export function deletePasswordResetToken(token: string){
+  return db.passwordResetToken.delete({ 
+    where: { token } 
+  });
+}

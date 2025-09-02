@@ -32,3 +32,11 @@ export function findUserById(id:any) {
   });
 }
 
+export function updateUsersPassword(
+  userId:string, 
+  hashedPassword:string) {
+    return db.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+}
