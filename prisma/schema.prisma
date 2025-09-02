@@ -20,25 +20,59 @@ enum Role {
   ADMIN
 }
 
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMIT
+}
+
+enum RideStatus {
+  PENDING     // created but not accepted
+  ACCEPTED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+
+enum RideType {
+  DELIVERY      // deliver a box
+  REGULAR       // normal ride
+  SEAT_RESERVE  // fixed price
+}
+
+enum VehicleType {
+  CAR
+  BIKE
+}
+
+
+
 model User {
   id            String         @id @unique @default(uuid())
   email         String         @unique
   password      String
   role      Role     @default(USER)
+  photo     String?
+  address   String?
 
   driverProfile DriverProfile? // only if role = DRIVER
   verification  Verification[] // documents submitted by user
 
   refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
 
   Wallet Wallet[]
 
-  // rides where this user is the passenger
-  ridesAsPassenger Ride[] @relation("PassengerRides")
-  // rides where this user is the driver
-  ridesAsDriver    Ride[] @relation("DriverRides")
+  rides         Ride[]       @relation("PassengerRides")
+  driverRides   Ride[]       @relation("DriverRides")
+  ratingsGiven  Rating[]     @relation("RatingsGiven")
+  ratingsRecv   Rating[]     @relation("RatingsReceived")
+  notifications Notification[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
 }
 
@@ -54,10 +88,7 @@ model RefreshToken {
 }
 
 
-enum VehicleType {
-  CAR
-  MOTORBIKE
-}
+
 
 model Vehicle {
   id           String   @id @default(uuid())
@@ -69,14 +100,28 @@ model Vehicle {
   isActive     Boolean  @default(true) // driver selects which vehicle is active
 
   driver       DriverProfile @relation(fields: [driverId], references: [id])
+
+  Ride Ride[]
 }
 
 model DriverProfile {
   id           String   @id @default(uuid())
   userId       String   @unique
   vehicles  Vehicle[]
+  status            DriverStatus?
 
   user         User     @relation(fields: [userId], references: [id])
+}
+
+model DriverStatus {
+  id        String   @id @default(uuid())
+  driverId  String   @unique
+  isOnline  Boolean  @default(false)
+  lat       Float?
+  lng       Float?
+  updatedAt DateTime @updatedAt
+
+  driver    DriverProfile @relation(fields: [driverId], references: [id])
 }
 
 
@@ -90,12 +135,6 @@ model Verification {
   reviewedAt   DateTime?
 
   user         User     @relation(fields: [userId], references: [id])
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 
@@ -134,19 +173,9 @@ model GiftCard {
 }
 
 
-enum RideType {
-  DELIVERY   // box
-  REGULAR    // standard trip
-  SEAT       // fixed-price seat reservation
-}
 
-enum RideStatus {
-  PENDING     // created but not accepted
-  ACCEPTED    // driver accepted
-  IN_PROGRESS // driver picked up
-  COMPLETED   // ride finished
-  CANCELLED   // cancelled by user/driver
-}
+
+
 
 model Ride {
   id            String   @id @default(uuid())
@@ -173,5 +202,40 @@ model Ride {
   driver      User? @relation("DriverRides", fields: [driverId], references: [id])
 
   vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id])
+  commission    Commission?
+  ratings       Rating[]
 }
 
+
+model Commission {
+  id       String   @id @default(uuid())
+  rideId   String   @unique
+  percent  Float
+  amount   Int
+
+  ride     Ride @relation(fields: [rideId], references: [id])
+}
+
+model Rating {
+  id      String @id @default(uuid())
+  rideId  String
+  fromId  String
+  toId    String
+  score   Int
+  comment String?
+
+  ride    Ride @relation(fields: [rideId], references: [id])
+  from    User @relation("RatingsGiven", fields: [fromId], references: [id])
+  to      User @relation("RatingsReceived", fields: [toId], references: [id])
+}
+
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+}
