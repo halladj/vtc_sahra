@@ -14,13 +14,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  DRIVER
+  ADMIN
+}
+
 model User {
   id            String         @id @unique @default(uuid())
   email         String         @unique
   password      String
+  role      Role     @default(USER)
+
+  driverProfile DriverProfile? // only if role = DRIVER
+  verification  Verification[] // documents submitted by user
+
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  Wallet Wallet[]
+
+  // rides where this user is the passenger
+  ridesAsPassenger Ride[] @relation("PassengerRides")
+  // rides where this user is the driver
+  ridesAsDriver    Ride[] @relation("DriverRides")
+
 }
 
 model RefreshToken {
@@ -33,3 +52,126 @@ model RefreshToken {
   updatedAt   DateTime @updatedAt
   expireAt    DateTime
 }
+
+
+enum VehicleType {
+  CAR
+  MOTORBIKE
+}
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  driverId     String
+  type         VehicleType
+  model        String
+  year         Int
+  plate        String   @unique
+  isActive     Boolean  @default(true) // driver selects which vehicle is active
+
+  driver       DriverProfile @relation(fields: [driverId], references: [id])
+}
+
+model DriverProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  vehicles  Vehicle[]
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+
+model Verification {
+  id           String   @id @default(uuid())
+  userId       String
+  documentType String   // e.g., "ID_CARD", "DRIVER_LICENSE"
+  documentUrl  String   // file storage path / URL
+  status       VerificationStatus @default(PENDING)
+  reviewedBy   String?  // admin userId
+  reviewedAt   DateTime?
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Int      @default(0) // credits in smallest unit (e.g., cents)
+
+  user      User     @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  walletId  String
+  type      TransactionType
+  amount    Int
+  createdAt DateTime @default(now())
+  reference String?  // e.g., "Ride #123", "GiftCard #ABC123"
+
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+}
+
+enum TransactionType {
+  CREDIT    // adding money (QR scan, admin top-up)
+  DEBIT     // spending (ride payment, driver fee)
+}
+
+model GiftCard {
+  id        String   @id @default(uuid())
+  code      String   @unique // the QR code value
+  amount    Int
+  isUsed    Boolean  @default(false)
+  usedBy    String?  // userId who redeemed
+  usedAt    DateTime?
+}
+
+
+enum RideType {
+  DELIVERY   // box
+  REGULAR    // standard trip
+  SEAT       // fixed-price seat reservation
+}
+
+enum RideStatus {
+  PENDING     // created but not accepted
+  ACCEPTED    // driver accepted
+  IN_PROGRESS // driver picked up
+  COMPLETED   // ride finished
+  CANCELLED   // cancelled by user/driver
+}
+
+model Ride {
+  id            String   @id @default(uuid())
+  type          RideType
+  status        RideStatus @default(PENDING)
+
+  userId        String   // who requested the ride
+  driverId      String?  // who accepted the ride
+  vehicleId     String?  // optional if driver has multiple vehicles
+
+  origin        String
+  destination   String
+  distanceKm    Float?   // computed when booking
+  durationMin   Float?   // estimated duration
+  price         Int      // final price in credits
+
+  seatCount     Int?     // used only if type = SEAT
+  packageWeight Float?   // used only if type = DELIVERY
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User @relation("PassengerRides", fields: [userId], references: [id])
+  driver      User? @relation("DriverRides", fields: [driverId], references: [id])
+
+  vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id])
+}
+
