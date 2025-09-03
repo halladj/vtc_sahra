@@ -1,7 +1,7 @@
 import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { isAuthenticated, upload } from '../../middlewares';
-import { findUserById, updateUserPhoto } from './user.services';
+import { findUserById, updateUser, updateUserPhoto } from './user.services';
 
 const router = express.Router();
 
@@ -44,4 +44,18 @@ router.put(
     next(err);
   }
 })
+
+router.put("/profile", isAuthenticated, 
+
+  async (req:AuthenticatedRequest, res:Response, next:any) => {
+    try {
+      const { userId } = req.payload!;
+      const updatedUser = await updateUser(userId,req.body);
+      res.json(updatedUser);
+    } catch (err) {
+      next(err);
+    }
+  }
+)
+
 export = router;

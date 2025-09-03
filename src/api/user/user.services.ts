@@ -47,3 +47,14 @@ export function updateUserPhoto(userId:string, photoUrl:string) {
     data: {photo: photoUrl}
   })
 }
+
+
+export function updateUser(
+  userId: string, 
+  data: Partial<Pick<User, "email"| "address">>
+) {
+  return db.user.update({
+    where: {id: userId},
+    data
+  });
+}
