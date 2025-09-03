@@ -16,10 +16,22 @@ router.post(
   upload.single('photo'), 
   async (req, res, next) => {
   try {
-    const { email, password,  address } = req.body;
-    if (!email || !password) {
+    const { 
+      email, 
+      password, 
+      phoneNumber, 
+      firstName, 
+      lastName, 
+      sex, 
+      dateOfBirth, 
+      address, 
+      wilaya, 
+      commune 
+    } = req.body;
+
+    if (!email || !password || !phoneNumber) {
       res.status(400);
-      throw new Error('You must provide an email and a password.');
+      throw new Error('You must provide an email, a phone number and a password.');
     }
 
     const existingUser = await findUserByEmail(email);
@@ -35,7 +47,14 @@ router.post(
        password,
        role: Role.USER,
        photo: photoUrl? photoUrl : "",
-       address
+       address,
+       phoneNumber,
+       firstName,
+       lastName,
+       sex,
+       dateOfBirth,
+       wilaya,
+       commune
       });
     const { accessToken, refreshToken } = generateTokens(user);
     await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
@@ -56,13 +75,17 @@ router.post(
   async (req, res, next) => {
     try {
       const { 
-        email, 
+        email,
         password,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
         address,
-        vehicleType ,
-        vehicleModel ,
-        vehicleYear ,
-        vehicleplate,
+        wilaya,
+        commune,
+        vehicle
       } = req.body;
       if (!email || !password) {
         res.status(400);
@@ -80,14 +103,16 @@ router.post(
       const driver = await createDriverByEmailAndPassword({
         email,
         password,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
         address,
-       photo: photoUrl? photoUrl : "",
-       vehicle: {
-        type: VehicleType.CAR,
-        model: vehicleModel,
-        year: Number(vehicleYear),
-        plate: vehicleplate
-       }
+        wilaya,
+        commune,
+        photo: photoUrl? photoUrl :  "",
+        vehicle
 
       });
       const { accessToken, refreshToken } = generateTokens(driver);

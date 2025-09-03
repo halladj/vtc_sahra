@@ -1,4 +1,4 @@
-import {Role, User} from "../../generated/prisma";
+import {Role, Sex, User} from "../../generated/prisma";
 import bcrypt from 'bcrypt';
 import {db} from '../../utils/db';
 
@@ -12,11 +12,18 @@ export function findUserByEmail(email:string) {
 
 export function createUserByEmailAndPassword(user:
   {
-    email:string, 
-    password:string,
+    email: string;
+    password: string;
+    phoneNumber: string;
+    firstName?: string;
+    lastName?: string;
+    sex?: Sex;
     role: Role,
-    photo:string,
-    address: string
+    dateOfBirth?: Date;
+    photo?: string;
+    address?: string;
+    wilaya?: string;
+    commune?: string;
   }) {
   user.password = bcrypt.hashSync(user.password, 12);
   return db.user.create({

@@ -1,4 +1,4 @@
-import {Role, User, VehicleType} from "../../generated/prisma";
+import {Role, Sex, User, VehicleType} from "../../generated/prisma";
 import bcrypt from 'bcrypt';
 import {db} from '../../utils/db';
 
@@ -6,15 +6,22 @@ import {db} from '../../utils/db';
 export function createDriverByEmailAndPassword(
     user:
   {
-    email:string, 
-    password:string,
-    photo:string,
-    address: string,
+    email: string;
+    password: string;
+    phoneNumber: string;
+    firstName: string;
+    lastName: string;
+    sex: Sex;
+    dateOfBirth: Date;
+    photo: string;
+    address: string;
+    wilaya: string;
+    commune: string;
     vehicle: {
-        type: VehicleType;
-        model: string;
-        year: number;
-        plate: string;
+      type: VehicleType;
+      model: string;
+      year: number;
+      plate: string;
     };
 
   }) {
@@ -23,9 +30,16 @@ export function createDriverByEmailAndPassword(
     data: {
         email: user.email,
         password: user.password,
-        role: Role.DRIVER,
-        address: user.address,
-        photo: user.photo,
+        phoneNumber: user.phoneNumber,
+      role: Role.DRIVER,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      sex: user.sex,
+      dateOfBirth: user.dateOfBirth,
+      photo: user.photo,
+      address: user.address,
+      wilaya: user.wilaya,
+      commune: user.commune,
         driverProfile: {
             create: {
                 vehicles:{
