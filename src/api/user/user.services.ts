@@ -40,3 +40,10 @@ export function updateUsersPassword(
       data: { password: hashedPassword },
     });
 }
+
+export function updateUserPhoto(userId:string, photoUrl:string) {
+  return db.user.update({
+    where: {id: userId},
+    data: {photo: photoUrl}
+  })
+}
