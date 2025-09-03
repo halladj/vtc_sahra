@@ -51,7 +51,16 @@ export function updateUserPhoto(userId:string, photoUrl:string) {
 
 export function updateUser(
   userId: string, 
-  data: Partial<Pick<User, "email"| "address">>
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    dateOfBirth: Date;
+    phoneNumber: string;
+    address: string;
+    wilaya: string;
+    commune: string;
+    language: string;
+  }>
 ) {
   return db.user.update({
     where: {id: userId},

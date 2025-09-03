@@ -58,9 +58,18 @@ model User {
   id            String         @id @unique @default(uuid())
   email         String         @unique
   password      String
-  role      Role     @default(USER)
-  photo     String?
-  address   String?
+
+  role          Role     @default(USER)
+  photo         String?
+  address       String?        // street / building number
+  wilaya        String?        // ex: "Algiers", "Oran"
+  commune       String?        // ex: "Bab El Oued", "Bir Mourad Rais"
+  firstName     String?
+  lastName      String?
+  sex           Sex?
+  dateOfBirth   DateTime?
+  // todo make phone number required
+  phoneNumber   String?        @unique
 
   driverProfile DriverProfile? // only if role = DRIVER
   verification  Verification[] // documents submitted by user
@@ -80,6 +89,12 @@ model User {
 
 
   PasswordResetToken PasswordResetToken[]
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
 }
 
 model RefreshToken {
