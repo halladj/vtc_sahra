@@ -52,7 +52,7 @@ export function isAuthenticated(req:AuthenticatedRequest, res:Response, next:Nex
   return next();
 }
 
-function requireRole(...allowedRoles: Role[]) {
+export function requireRole(...allowedRoles: Role[]) {
   return (req: any, res:Response, next:NextFunction) => {
     const userRole = req.user.role;
     if (!allowedRoles.includes(userRole)) {
