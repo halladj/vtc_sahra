@@ -1,6 +1,6 @@
 import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { isAuthenticated } from '../../middlewares';
+import { isAuthenticated } from '../../middlewares/middlewares';
 import { findDriverById } from './driver.services';
 
 const router = express.Router();

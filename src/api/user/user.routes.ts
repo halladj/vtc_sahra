@@ -1,6 +1,6 @@
 import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { isAuthenticated, upload } from '../../middlewares';
+import { isAuthenticated, upload } from '../../middlewares/middlewares';
 import { findUserById, updateUser, updateUserPhoto } from './user.services';
 
 const router = express.Router();

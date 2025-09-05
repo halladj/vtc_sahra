@@ -1,6 +1,6 @@
 import request from "supertest";
 import express from "express";
-import { requireRole } from "../src/middlewares";
+import { requireRole } from "../src/middlewares/middlewares";
 import { Role } from "../src/generated/prisma";
 
 const app = express();

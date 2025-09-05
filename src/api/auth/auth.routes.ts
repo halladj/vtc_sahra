@@ -4,7 +4,7 @@ import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, r
 import { createUserByEmailAndPassword, findUserByEmail, findUserById, updateUsersPassword } from '../user/user.services';
 import { generateTokens } from '../../utils/jwt';
 import { Role, VehicleType } from '../../generated/prisma';
-import { upload } from '../../middlewares';
+import { upload } from '../../middlewares/middlewares';
 import { createDriverByEmailAndPassword } from '../driver/driver.services';
 import crypto from "crypto";
 

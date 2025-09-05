@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { Role } from "./generated/prisma";
+import { Role } from "../generated/prisma";
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuid } from 'uuid';

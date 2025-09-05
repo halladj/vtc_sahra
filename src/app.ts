@@ -8,7 +8,7 @@ require('dotenv').config();
 
 // import middlewares from './middlewares';
 import api from './api';
-import { errorHandler, notFound } from './middlewares';
+import { errorHandler, notFound } from './middlewares/middlewares';
 
 const app = express();
 
