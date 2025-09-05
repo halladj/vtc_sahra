@@ -3,8 +3,7 @@ import bcrypt from 'bcrypt';
 import {db} from '../../utils/db';
 
 
-export function createDriverByEmailAndPassword(
-    user:
+export function createDriverByEmailAndPassword( user:
   {
     email: string;
     password: string;
@@ -64,10 +63,10 @@ export function createDriverByEmailAndPassword(
 }
 
 
-export function findDriverById(id:any) {
+export function findDriverById(driverId:any) {
   return db.user.findUnique({
     where: {
-      id,
+      id:driverId,
     },
     include:{
       driverProfile: {
@@ -76,5 +75,52 @@ export function findDriverById(id:any) {
         }
       }
     }
+  });
+}
+
+export function addVehicleForDriver(driverId:string,
+  vehicle: {
+    type: VehicleType,
+    model: string,
+    year: number,
+    plate: string
+  }
+) {
+  return db.vehicle.create({
+    data: {
+      driverId: driverId,
+      type: vehicle.type,
+      model: vehicle.model,
+      plate: vehicle.plate,
+      year: vehicle.year
+    }
+  })
+}
+
+export function updateVehicle(driverId: string,
+  vehicleId: string, 
+  vehicle:  Partial<{
+    model: string,
+    type: VehicleType,
+    year: number,
+    plate: string
+  }>) {
+    return db.vehicle.update({
+      where: {id: vehicleId, driverId:driverId},
+      data: vehicle
+    });
+}
+
+export function deleteVehicleForDriver(driverId:string,
+  vehicleId: string
+) {
+  return db.vehicle.delete({
+    where: {id: vehicleId, driverId:driverId}
+  });
+}
+
+export function getAllVehiclesForDriver(driverId:string) {
+  return db.vehicle.findMany({
+    where: {driverId: driverId}
   });
 }

@@ -11,8 +11,7 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-router.post(
-  '/register',
+router.post('/register',
   upload.single('photo'), 
   async (req, res, next) => {
   try {
@@ -69,8 +68,7 @@ router.post(
 });
 
 
-router.post(
-  '/register-driver', 
+router.post( '/register-driver', 
   upload.single('photo'), 
   async (req, res, next) => {
     try {
@@ -252,38 +250,44 @@ router.post("/forgot-password", async (req,res,next) => {
 
 
 router.post("/reset-password", async (req, res,next ) => {
-  const { token, newPassword } = req.body;
+  try{
 
-  const resetToken = await findPasswordResetToken(token);
-  if (!resetToken) {
-    return res.status(400).json({ error: "Invalid token" });
+    const { token, newPassword } = req.body;
+
+    const resetToken = await findPasswordResetToken(token);
+    if (!resetToken) {
+      return res.status(400).json({ error: "Invalid token" });
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ error: "Token expired" });
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const user = await findUserById(resetToken.userId);
+    const pwd = user?.password;
+    const isSamePassword = await bcrypt.compare(
+      newPassword, 
+      pwd ? pwd : ""
+    );
+    if (isSamePassword){
+      return res.status(400).json({ 
+        error: "Must use a different password`" 
+      });
+    }
+
+    await updateUsersPassword(
+      resetToken.userId, hashedPassword
+    );
+    // remove token so it can’t be reused
+    await deletePasswordResetToken(token);
+
+    res.json({ message: "Password reset successfully" });
   }
-
-  if (resetToken.expiresAt < new Date()) {
-    return res.status(400).json({ error: "Token expired" });
+  catch (err){
+    next(err)
   }
-
-  // hash password
-  const hashedPassword = await bcrypt.hash(newPassword, 12);
-  const user = await findUserById(resetToken.userId);
-  const pwd = user?.password;
-  const isSamePassword = await bcrypt.compare(
-    newPassword, 
-    pwd ? pwd : ""
-  );
-  if (isSamePassword){
-    return res.status(400).json({ 
-    error: "Must use a different password`" 
-    });
-  }
-
-  await updateUsersPassword(
-    resetToken.userId, hashedPassword
-  );
-  // remove token so it can’t be reused
-  await deletePasswordResetToken(token);
-
-  res.json({ message: "Password reset successfully" });
 });
 
 export = router;

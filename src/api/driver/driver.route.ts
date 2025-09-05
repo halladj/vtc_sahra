@@ -1,7 +1,8 @@
 import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { isAuthenticated } from '../../middlewares/middlewares';
-import { findDriverById } from './driver.services';
+import { isAuthenticated, requireRole } from '../../middlewares/middlewares';
+import { addVehicleForDriver, deleteVehicleForDriver, findDriverById, getAllVehiclesForDriver, updateVehicle } from './driver.services';
+import { Role, VehicleType } from '../../generated/prisma';
 
 const router = express.Router();
 
@@ -23,5 +24,105 @@ router.get('/profile', isAuthenticated, async (
   }
 });
 
+router.post("/vehicles",
+  isAuthenticated,
+  requireRole(Role.DRIVER),
+  async (req:AuthenticatedRequest,res,next)=>{
+    try {
+      const {
+        vehicle      
+      }:{
+        vehicle: {
+          type: VehicleType,
+          model: string,
+          year: number,
+          plate:string
+        }
+      } = req.body;
+
+      if (!vehicle) {
+        res.status(400);
+        throw new Error('You must provide a vehicle.');
+      }
+
+      const { userId } = req.payload!;
+      
+      const newVehicle = await addVehicleForDriver(
+        userId, 
+        vehicle
+      );
+      res.json(newVehicle);
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+router.get("/vehicles",
+  isAuthenticated,
+  requireRole(Role.DRIVER),
+  async (req:AuthenticatedRequest,res,next) => {
+    try {
+      const { userId } = req.payload!;
+      
+      const vehicles = await getAllVehiclesForDriver(userId);
+      res.json(vehicles);
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+router.put("/vehicles/:vehicleId",
+  isAuthenticated,
+  requireRole(Role.DRIVER),
+  async (req:AuthenticatedRequest,res,next)=>{
+    try {
+      // const {vehicleId} = req.body;
+      const {  vehicleId } = req.params;
+      if (!vehicleId){
+        res.status(400);
+        throw new Error('You must provide a vehicleId.');
+      }
+      const { userId } = req.payload!;
+      if (userId!== req.payload!.userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updatedVehicle= await updateVehicle(
+        userId,
+        vehicleId,
+        req.body);
+      
+      res.json(updatedVehicle);
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+router.delete("/vehicles/:vehicleId",
+  isAuthenticated,
+  requireRole(Role.DRIVER),
+  async (req:AuthenticatedRequest,res,next) => {
+    try {
+      // const {vehicleId} = req.body;
+      const {  vehicleId } = req.params;
+
+      if (!vehicleId){
+        res.status(400);
+        throw new Error('You must provide a vehicleId.');
+      }
+
+      const { userId } = req.payload!;
+      await deleteVehicleForDriver(userId, vehicleId);
+      res.json({ message: "Vehicle deleted successfully" });
+
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 export = router;

@@ -25,8 +25,7 @@ router.get('/profile', isAuthenticated, async (
 });
 
 
-router.put(
-  "/photo", 
+router.put("/photo", 
   isAuthenticated, 
   upload.single('photo'), 
 
