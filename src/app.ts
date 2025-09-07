@@ -9,6 +9,7 @@ require('dotenv').config();
 // import middlewares from './middlewares';
 import api from './api';
 import { errorHandler, notFound } from './middlewares/middlewares';
+import path from 'path';
 
 const app = express();
 
@@ -19,6 +20,9 @@ app.use(cors());
 app.use(express.json());
 
 setupSwagger(app);
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 
 app.get('/', (req, res) => {
   res.json({

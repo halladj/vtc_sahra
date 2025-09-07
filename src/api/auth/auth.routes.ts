@@ -39,7 +39,7 @@ router.post('/register',
       res.status(400);
       throw new Error('Email already in use.');
     }
-    const photoUrl = req.file ? `/uploads/users/${req.file.filename}` : null;
+    const photoUrl = req.file ? `uploads/users/${req.file.filename}` : null;
 
     const user = await createUserByEmailAndPassword({
        email, 
