@@ -64,14 +64,29 @@ export function requireRole(...allowedRoles: Role[]) {
 
 
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/users')); // go 2 levels up
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, path.join(__dirname, '../../uploads/users')); // go 2 levels up
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
+//     cb(null, uniqueName);
+//   },
+// });
 
-export const upload = multer({ storage });
+
+// export const upload = multer({ storage });
+
+export function createUploader(subfolder: string) {
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, `../../uploads/${subfolder}`));
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
+      cb(null, uniqueName);
+    },
+  });
+
+  return multer({ storage });
+}

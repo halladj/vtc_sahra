@@ -24,13 +24,7 @@ enum Role {
   ADMIN
 }
 
-enum VerificationStatus {
-  PENDING
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-  RESUBMIT
-}
+
 
 enum RideStatus {
   PENDING     // created but not accepted
@@ -145,11 +139,24 @@ model DriverStatus {
   driver    DriverProfile @relation(fields: [driverId], references: [id])
 }
 
+enum DocumentType {
+  ID_CARD
+  DRIVER_LICENSE
+  INSURANCE
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMIT
+}
 
 model Verification {
   id           String   @id @default(uuid())
   userId       String
-  documentType String   // e.g., "ID_CARD", "DRIVER_LICENSE"
+  documentType DocumentType// e.g., "ID_CARD", "DRIVER_LICENSE"
   documentUrl  String   // file storage path / URL
   status       VerificationStatus @default(PENDING)
   reviewedBy   String?  // admin userId

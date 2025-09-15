@@ -18,7 +18,21 @@ router.get('/profile', isAuthenticated, async (
   try {
     const { userId } = req.payload!;
     const user = await findDriverById(userId);
-    res.json(user);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const photoUrl = user.photo
+      ? `${req.protocol}://${req.get("host")}/${user.photo}`
+      : null;
+
+    // res.json(user);
+    res.json({
+      ...user,
+      photo: photoUrl, 
+    });
+
   } catch (err) {
     next(err);
   }

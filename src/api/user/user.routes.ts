@@ -1,11 +1,11 @@
 import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { isAuthenticated, upload } from '../../middlewares/middlewares';
+import { createUploader, isAuthenticated } from '../../middlewares/middlewares';
 import { findUserById, updateUser, updateUserPhoto } from './user.services';
 
 const router = express.Router();
 
-
+const userPhotoUpload = createUploader("users");
 
 interface AuthenticatedRequest extends Request {
   payload?: JwtPayload;
@@ -39,7 +39,7 @@ router.get('/profile', isAuthenticated, async (
 
 router.put("/photo", 
   isAuthenticated, 
-  upload.single('photo'), 
+  userPhotoUpload.single('photo'), 
 
   async (req:AuthenticatedRequest, res:Response, next:any) => {
   try {
