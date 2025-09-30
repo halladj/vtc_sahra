@@ -3,12 +3,14 @@ import bcrypt from 'bcrypt';
 import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, revokeTokens, createPasswordResetToken, findPasswordResetToken, deletePasswordResetToken } from './auth.services';
 import { createUserByEmailAndPassword, findUserByEmail, findUserById, updateUsersPassword } from '../user/user.services';
 import { generateTokens } from '../../utils/jwt';
-import { Role, VehicleType } from '../../generated/prisma';
+import { Role, Vehicle, VehicleType } from '../../generated/prisma';
 // import { upload } from '../../middlewares/middlewares';
 import { createDriverByEmailAndPassword } from '../driver/driver.services';
 import crypto from "crypto";
 import { createUploader } from '../../middlewares/middlewares';
 
+//dev only remove on prod
+import objectPath from "object-path";
 
 const router = express.Router();
 
@@ -75,6 +77,26 @@ router.post( '/register-driver',
   userPhotoUpload.single('photo'), 
   async (req, res, next) => {
     try {
+      let body:any = {}
+      var vehicle:Vehicle ={
+        id: '',
+        driverId: '',
+        type: 'CAR',
+        model: '',
+        year: 0,
+        plate: '',
+        isActive: false
+      }
+      if (process.env.NODE_ENV === "development"){
+        const rebuilt = {};
+        for (const [key, value] of Object.entries(req.body)) {
+          objectPath.set(rebuilt, key, value);
+        }
+        body = rebuilt;
+        vehicle = body.vehicle;
+        vehicle.year = parseInt(body.vehicle.year)
+        console.log(vehicle)
+      }
       const { 
         email,
         password,
@@ -86,7 +108,7 @@ router.post( '/register-driver',
         address,
         wilaya,
         commune,
-        vehicle
+        // vehicle
       } = req.body;
       if (!email || !password) {
         res.status(400);
@@ -114,7 +136,6 @@ router.post( '/register-driver',
         commune,
         photo: photoUrl? photoUrl :  "",
         vehicle
-
       });
       const { accessToken, refreshToken } = generateTokens(driver);
       await addRefreshTokenToWhitelist({ refreshToken, userId: driver.id });
