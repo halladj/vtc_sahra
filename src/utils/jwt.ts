@@ -11,7 +11,7 @@ export function generateAccessToken(user: User) {
     userId: user.id,
     role: user.role
   }, JWT_KEY , {
-    expiresIn: '5m',
+    expiresIn: '2h',
   });
 }
 
