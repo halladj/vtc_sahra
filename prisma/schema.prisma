@@ -124,6 +124,7 @@ model DriverProfile {
   userId       String   @unique
   vehicles  Vehicle[]
   status            DriverStatus?
+  isActive     Boolean  @default(false)
 
   user         User     @relation(fields: [userId], references: [id])
 }
