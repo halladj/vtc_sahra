@@ -46,14 +46,13 @@ router.put("/photo",
     const { userId } = req.payload!;
 
     const photoUrl = req.file ? `${req.get("host")}/uploads/users/${req.file.filename}` : null;
-    console.log(req.get("host"))
-    const d = req.file ? req.file.filename : "";
-    console.log(d)
+    console.log(photoUrl)
 
     const user = await updateUserPhoto(
       userId, 
       photoUrl ? photoUrl: ""
     );
+    console.log(user)
     res.json(user);
   } catch (err) {
     next(err);
