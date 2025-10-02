@@ -62,6 +62,18 @@ router.put("/profile", isAuthenticated,
     try {
       const { userId } = req.payload!;
       const updatedUser = await updateUser(userId,req.body);
+
+      const photoUrl = updatedUser.photo
+        ? `${req.protocol}://${req.get("host")}${updatedUser.photo}`
+        : null;
+
+    // res.json(user);
+     res.json({
+      ...updateUserPhoto,
+      photo: photoUrl, 
+    });
+
+      
       res.json(updatedUser);
     } catch (err) {
       next(err);
