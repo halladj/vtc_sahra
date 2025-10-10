@@ -1,4 +1,4 @@
-import { DocumentType, VerificationStatus } from "../../generated/prisma";
+import { DocumentType, VerificationStatus } from "@prisma/client";
 import { db } from "../../utils/db";
 
 /**

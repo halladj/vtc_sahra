@@ -2,7 +2,7 @@ import express, {Request, Response, Handler} from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { isAuthenticated, requireRole } from '../../middlewares/middlewares';
 import { addVehicleForDriver, deleteVehicleForDriver, findDriverById, getAllVehiclesForDriver, updateVehicle } from './driver.services';
-import { Role, VehicleType } from '../../generated/prisma';
+import { Role, VehicleType } from "@prisma/client";
 
 const router = express.Router();
 

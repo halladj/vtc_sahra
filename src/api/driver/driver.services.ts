@@ -1,4 +1,4 @@
-import {Role, Sex, User, VehicleType} from "../../generated/prisma";
+import {Role, Sex, User, VehicleType} from "@prisma/client";
 import bcrypt from 'bcrypt';
 import {db} from '../../utils/db';
 

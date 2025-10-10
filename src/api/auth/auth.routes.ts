@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { addRefreshTokenToWhitelist, findRefreshToken, deleteRefreshTokenById, revokeTokens, createPasswordResetToken, findPasswordResetToken, deletePasswordResetToken } from './auth.services';
 import { createUserByEmailAndPassword, findUserByEmail, findUserById, updateUsersPassword } from '../user/user.services';
 import { generateTokens } from '../../utils/jwt';
-import { Role, Vehicle, VehicleType } from '../../generated/prisma';
+import { Role, Vehicle, VehicleType } from "@prisma/client";
 // import { upload } from '../../middlewares/middlewares';
 import { createDriverByEmailAndPassword } from '../driver/driver.services';
 import crypto from "crypto";
