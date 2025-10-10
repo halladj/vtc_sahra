@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
-
+import fs from "fs";
 
 
 
@@ -77,12 +77,35 @@ export function requireRole(...allowedRoles: Role[]) {
 
 // export const upload = multer({ storage });
 
+// export function createUploader(subfolder: string) {
+//   const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//       cb(null, path.join(__dirname, `../../uploads/${subfolder}`));
+//     },
+//     filename: (req, file, cb) => {
+//       const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
+//       cb(null, uniqueName);
+//     },
+//   });
+
+//   return multer({ storage });
+// }
+
+const BASE_UPLOADS = path.join(process.cwd(), "uploads"); // always inside Render working dir
+
 export function createUploader(subfolder: string) {
+  const uploadDir = path.join(BASE_UPLOADS, subfolder);
+
+  // Ensure the folder exists
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
   const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, path.join(__dirname, `../../uploads/${subfolder}`));
+    destination: (_req, _file, cb) => {
+      cb(null, uploadDir);
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
       const uniqueName = `${uuid()}${path.extname(file.originalname)}`;
       cb(null, uniqueName);
     },
