@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import {User} from '../generated/prisma';
+import {User} from "@prisma/client"; 
 
 
 const JWT_KEY:string = process.env.JWT_ACCESS_SECRET ? process.env.JWT_ACCESS_SECRET :"VTC_SECRET";
