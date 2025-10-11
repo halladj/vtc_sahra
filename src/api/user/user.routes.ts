@@ -71,13 +71,13 @@ router.put("/profile", isAuthenticated,
         : null;
 
     // res.json(user);
-     res.json({
-      ...updateUserPhoto,
-      photo: photoUrl, 
-    });
+      res.json({
+        ...updatedUser,
+        photo: photoUrl, 
+      });
 
       
-      res.json(updatedUser);
+      // res.json(updatedUser);
     } catch (err) {
       next(err);
     }
