@@ -1,0 +1,292 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../src/generated/prisma"
+// }
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../node_modules/@prisma/client"
+// }
+
+generator client {
+  provider = "prisma-client-js"
+  // remove "output" if you have it
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
+enum Role {
+  USER
+  DRIVER
+  ADMIN
+}
+
+
+
+enum RideStatus {
+  PENDING     // created but not accepted
+  ACCEPTED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+
+enum RideType {
+  DELIVERY      // deliver a box
+  REGULAR       // normal ride
+  SEAT_RESERVE  // fixed price
+}
+
+enum VehicleType {
+  CAR
+  BIKE
+}
+
+
+
+model User {
+  id            String         @id @unique @default(uuid())
+  email         String         @unique
+  password      String
+
+  role          Role     @default(USER)
+  photo         String?
+  address       String?        // street / building number
+  wilaya        String?        // ex: "Algiers", "Oran"
+  commune       String?        // ex: "Bab El Oued", "Bir Mourad Rais"
+  firstName     String?
+  lastName      String?
+  sex           Sex?
+  dateOfBirth   DateTime?
+  // todo make phone number required
+  phoneNumber   String?        @unique
+
+  driverProfile DriverProfile? // only if role = DRIVER
+  verification  Verification[] // documents submitted by user
+
+  refreshTokens RefreshToken[]
+
+  Wallet Wallet[]
+
+  rides         Ride[]       @relation("PassengerRides")
+  driverRides   Ride[]       @relation("DriverRides")
+  ratingsGiven  Rating[]     @relation("RatingsGiven")
+  ratingsRecv   Rating[]     @relation("RatingsReceived")
+  notifications Notification[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+
+  PasswordResetToken PasswordResetToken[]
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model RefreshToken {
+  id          String   @id @unique @default(uuid())
+  hashedToken String   @unique
+  userId      String
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expireAt    DateTime
+}
+
+
+
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  driverId     String
+  type         VehicleType
+  model        String
+  year         Int
+  plate        String   @unique
+  isActive     Boolean  @default(true) // driver selects which vehicle is active
+
+  driver       DriverProfile @relation(fields: [driverId], references: [id])
+
+  Ride Ride[]
+}
+
+model DriverProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  vehicles  Vehicle[]
+  status            DriverStatus?
+  isActive     Boolean  @default(false)
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model DriverStatus {
+  id        String   @id @default(uuid())
+  driverId  String   @unique
+  isOnline  Boolean  @default(false)
+  lat       Float?
+  lng       Float?
+  updatedAt DateTime @updatedAt
+
+  driver    DriverProfile @relation(fields: [driverId], references: [id])
+}
+
+enum DocumentType {
+  ID_CARD
+  DRIVER_LICENSE
+  INSURANCE
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMIT
+}
+
+model Verification {
+  id           String   @id @default(uuid())
+  userId       String
+  documentType DocumentType// e.g., "ID_CARD", "DRIVER_LICENSE"
+  documentUrl  String   // file storage path / URL
+  status       VerificationStatus @default(PENDING)
+  reviewedBy   String?  // admin userId
+  reviewedAt   DateTime?
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Int      @default(0) // credits in smallest unit (e.g., cents)
+
+  user      User     @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  walletId  String
+  type      TransactionType
+  amount    Int
+  createdAt DateTime @default(now())
+  reference String?  // e.g., "Ride #123", "GiftCard #ABC123"
+
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+}
+
+enum TransactionType {
+  CREDIT    // adding money (QR scan, admin top-up)
+  DEBIT     // spending (ride payment, driver fee)
+}
+
+model GiftCard {
+  id        String   @id @default(uuid())
+  code      String   @unique // the QR code value
+  amount    Int
+  isUsed    Boolean  @default(false)
+  usedBy    String?  // userId who redeemed
+  usedAt    DateTime?
+}
+
+
+
+
+
+
+model Ride {
+  id            String   @id @default(uuid())
+  type          RideType
+  status        RideStatus @default(PENDING)
+
+  userId        String   // who requested the ride
+  driverId      String?  // who accepted the ride
+  vehicleId     String?  // optional if driver has multiple vehicles
+
+  origin        String
+  destination   String
+  distanceKm    Float?   // computed when booking
+  durationMin   Float?   // estimated duration
+  price         Int      // final price in credits
+
+  seatCount     Int?     // used only if type = SEAT
+  packageWeight Float?   // used only if type = DELIVERY
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User @relation("PassengerRides", fields: [userId], references: [id])
+  driver      User? @relation("DriverRides", fields: [driverId], references: [id])
+
+  vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id])
+  commission    Commission?
+  ratings       Rating[]
+}
+
+
+model Commission {
+  id       String   @id @default(uuid())
+  rideId   String   @unique
+  percent  Float
+  amount   Int
+
+  ride     Ride @relation(fields: [rideId], references: [id])
+}
+
+model Rating {
+  id      String @id @default(uuid())
+  rideId  String
+  fromId  String
+  toId    String
+  score   Int
+  comment String?
+
+  ride    Ride @relation(fields: [rideId], references: [id])
+  from    User @relation("RatingsGiven", fields: [fromId], references: [id])
+  to      User @relation("RatingsReceived", fields: [toId], references: [id])
+}
+
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+}
+
+
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
