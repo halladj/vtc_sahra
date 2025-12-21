@@ -1,4 +1,4 @@
-import express, {Request, Response, Handler} from 'express';
+import express, { Request, Response, Handler } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { isAuthenticated, requireRole } from '../../middlewares/middlewares';
 import { addVehicleForDriver, deleteVehicleForDriver, findDriverById, getAllVehiclesForDriver, updateVehicle } from './driver.services';
@@ -14,7 +14,7 @@ interface AuthenticatedRequest extends Request {
 
 
 router.get('/profile', isAuthenticated, async (
-  req:AuthenticatedRequest, res:Response, next:any) => {
+  req: AuthenticatedRequest, res: Response, next: any) => {
   try {
     const { userId } = req.payload!;
     const user = await findDriverById(userId);
@@ -30,7 +30,7 @@ router.get('/profile', isAuthenticated, async (
     // res.json(user);
     res.json({
       ...user,
-      photo: photoUrl, 
+      photo: photoUrl,
     });
 
   } catch (err) {
@@ -41,16 +41,16 @@ router.get('/profile', isAuthenticated, async (
 router.post("/vehicles",
   isAuthenticated,
   requireRole(Role.DRIVER),
-  async (req:AuthenticatedRequest,res,next)=>{
+  async (req: AuthenticatedRequest, res, next) => {
     try {
       const {
-        vehicle      
-      }:{
+        vehicle
+      }: {
         vehicle: {
           type: VehicleType,
           model: string,
           year: number,
-          plate:string
+          plate: string
         }
       } = req.body;
 
@@ -60,13 +60,13 @@ router.post("/vehicles",
       }
 
       const { userId } = req.payload!;
-      
+
       const newVehicle = await addVehicleForDriver(
-        userId, 
+        userId,
         vehicle
       );
       res.json(newVehicle);
-      
+
     } catch (error) {
       next(error)
     }
@@ -76,10 +76,11 @@ router.post("/vehicles",
 router.get("/vehicles",
   isAuthenticated,
   requireRole(Role.DRIVER),
-  async (req:AuthenticatedRequest,res,next) => {
+  async (req: AuthenticatedRequest, res, next) => {
     try {
       const { userId } = req.payload!;
-      
+      console.log(userId);
+
       const vehicles = await getAllVehiclesForDriver(userId);
       res.json(vehicles);
     } catch (error) {
@@ -91,24 +92,25 @@ router.get("/vehicles",
 router.put("/vehicles/:vehicleId",
   isAuthenticated,
   requireRole(Role.DRIVER),
-  async (req:AuthenticatedRequest,res,next)=>{
+  async (req: AuthenticatedRequest, res, next) => {
     try {
       // const {vehicleId} = req.body;
-      const {  vehicleId } = req.params;
-      if (!vehicleId){
+      const { vehicleId } = req.params;
+      if (!vehicleId) {
         res.status(400);
         throw new Error('You must provide a vehicleId.');
       }
       const { userId } = req.payload!;
-      if (userId!== req.payload!.userId) {
+      if (userId !== req.payload!.userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
-      const updatedVehicle= await updateVehicle(
+      console.log(req.body);
+      const updatedVehicle = await updateVehicle(
         userId,
         vehicleId,
         req.body);
-      
+
       res.json(updatedVehicle);
     } catch (error) {
       next(error)
@@ -119,12 +121,12 @@ router.put("/vehicles/:vehicleId",
 router.delete("/vehicles/:vehicleId",
   isAuthenticated,
   requireRole(Role.DRIVER),
-  async (req:AuthenticatedRequest,res,next) => {
+  async (req: AuthenticatedRequest, res, next) => {
     try {
       // const {vehicleId} = req.body;
-      const {  vehicleId } = req.params;
+      const { vehicleId } = req.params;
 
-      if (!vehicleId){
+      if (!vehicleId) {
         res.status(400);
         throw new Error('You must provide a vehicleId.');
       }

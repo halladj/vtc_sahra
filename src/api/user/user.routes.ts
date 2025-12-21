@@ -1,4 +1,4 @@
-import express, {Request, Response, Handler} from 'express';
+import express, { Request, Response, Handler } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { createUploader, isAuthenticated } from '../../middlewares/middlewares';
 import { findUserById, updateUser, updateUserPhoto } from './user.services';
@@ -13,7 +13,7 @@ interface AuthenticatedRequest extends Request {
 
 
 router.get('/profile', isAuthenticated, async (
-  req:AuthenticatedRequest, res:Response, next:any) => {
+  req: AuthenticatedRequest, res: Response, next: any) => {
   try {
     const { userId } = req.payload!;
     const user = await findUserById(userId);
@@ -27,9 +27,9 @@ router.get('/profile', isAuthenticated, async (
       : null;
 
     // res.json(user);
-     res.json({
+    res.json({
       ...user,
-      photo: photoUrl, 
+      photo: photoUrl,
     });
   } catch (err) {
     next(err);
@@ -37,46 +37,46 @@ router.get('/profile', isAuthenticated, async (
 });
 
 
-router.put("/photo", 
-  isAuthenticated, 
-  userPhotoUpload.single('photo'), 
+router.put("/photo",
+  isAuthenticated,
+  userPhotoUpload.single('photo'),
 
-  async (req:AuthenticatedRequest, res:Response, next:any) => {
-  try {
-    const { userId } = req.payload!;
-
-    const photoUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/users/${req.file.filename}` : null;
-    console.log(photoUrl)
-
-    const user = await updateUserPhoto(
-      userId, 
-      photoUrl ? photoUrl: ""
-    );
-    console.log(user)
-    res.json(user);
-  } catch (err) {
-    next(err);
-  }
-})
-
-router.put("/profile", isAuthenticated, 
-
-  async (req:AuthenticatedRequest, res:Response, next:any) => {
+  async (req: AuthenticatedRequest, res: Response, next: any) => {
     try {
       const { userId } = req.payload!;
-      const updatedUser = await updateUser(userId,req.body);
+
+      const photoUrl = req.file ? `/uploads/users/${req.file.filename}` : null;
+      console.log(photoUrl)
+
+      const user = await updateUserPhoto(
+        userId,
+        photoUrl ? photoUrl : ""
+      );
+      console.log(user)
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  })
+
+router.put("/profile", isAuthenticated,
+
+  async (req: AuthenticatedRequest, res: Response, next: any) => {
+    try {
+      const { userId } = req.payload!;
+      const updatedUser = await updateUser(userId, req.body);
 
       const photoUrl = updatedUser.photo
         ? `${req.protocol}://${req.get("host")}${updatedUser.photo}`
         : null;
 
-    // res.json(user);
+      // res.json(user);
       res.json({
         ...updatedUser,
-        photo: photoUrl, 
+        photo: photoUrl,
       });
 
-      
+
       // res.json(updatedUser);
     } catch (err) {
       next(err);
