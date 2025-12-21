@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { Role } from "@prisma/client"; 
+import { Role } from "@prisma/client";
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
@@ -12,14 +12,14 @@ interface AuthenticatedRequest extends Request {
   payload?: JwtPayload;
 }
 
-export function notFound(req:Request, res:Response, next:NextFunction) {
+export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
   const error = new Error(`🔍 - Not Found - ${req.originalUrl}`);
   next(error);
 }
 
 /* eslint-disable no-unused-vars */
-export function errorHandler(err:Error, req:Request, res:Response, next:NextFunction) {
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   /* eslint-enable no-unused-vars */
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
   res.status(statusCode);
@@ -29,7 +29,7 @@ export function errorHandler(err:Error, req:Request, res:Response, next:NextFunc
   });
 }
 
-export function isAuthenticated(req:AuthenticatedRequest, res:Response, next:NextFunction) {
+export function isAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const { authorization } = req.headers;
 
   if (!authorization) {
@@ -39,9 +39,9 @@ export function isAuthenticated(req:AuthenticatedRequest, res:Response, next:Nex
 
   try {
     const token = authorization.split(' ')[1]!;
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!)as JwtPayload;
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as JwtPayload;
     req.payload = payload;
-  } catch (err:any) {
+  } catch (err: any) {
     res.status(401);
     if (err.name === 'TokenExpiredError') {
       throw new Error(err.name);
@@ -53,8 +53,10 @@ export function isAuthenticated(req:AuthenticatedRequest, res:Response, next:Nex
 }
 
 export function requireRole(...allowedRoles: Role[]) {
-  return (req: any, res:Response, next:NextFunction) => {
-    const userRole = req.user.role;
+  return (req: any, res: Response, next: NextFunction) => {
+    // const userRole = req.user.role;
+
+    const userRole = req.payload?.role;
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ error: "Forbidden" });
     }

@@ -1,9 +1,9 @@
-import {Role, Sex, User, VehicleType} from "@prisma/client";
+import { Role, Sex, User, VehicleType } from "@prisma/client";
 import bcrypt from 'bcrypt';
-import {db} from '../../utils/db';
+import { db } from '../../utils/db';
 
 
-export function createDriverByEmailAndPassword( user:
+export function createDriverByEmailAndPassword(user:
   {
     email: string;
     password: string;
@@ -27,9 +27,9 @@ export function createDriverByEmailAndPassword( user:
   user.password = bcrypt.hashSync(user.password, 12);
   return db.user.create({
     data: {
-        email: user.email,
-        password: user.password,
-        phoneNumber: user.phoneNumber,
+      email: user.email,
+      password: user.password,
+      phoneNumber: user.phoneNumber,
       role: Role.DRIVER,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -39,36 +39,20 @@ export function createDriverByEmailAndPassword( user:
       address: user.address,
       wilaya: user.wilaya,
       commune: user.commune,
-        driverProfile: {
-            create: {
-                vehicles:{
-                    create: [{
-                        type: user.vehicle.type,
-                        model: user.vehicle.model,
-                        year: user.vehicle.year,
-                        plate: user.vehicle.plate,
-                    }]
-                }
-            }
+      driverProfile: {
+        create: {
+          vehicles: {
+            create: [{
+              type: user.vehicle.type,
+              model: user.vehicle.model,
+              year: user.vehicle.year,
+              plate: user.vehicle.plate,
+            }]
+          }
         }
+      }
     },
     include: {
-        driverProfile: {
-            include :{
-                vehicles: true
-            }
-        }
-    }
-  });
-}
-
-
-export function findDriverById(driverId:any) {
-  return db.user.findUnique({
-    where: {
-      id:driverId,
-    },
-    include:{
       driverProfile: {
         include: {
           vehicles: true
@@ -78,7 +62,22 @@ export function findDriverById(driverId:any) {
   });
 }
 
-export function addVehicleForDriver(driverId:string,
+export function findDriverById(driverId: any) {
+  return db.user.findUnique({
+    where: {
+      id: driverId,
+    },
+    include: {
+      driverProfile: {
+        include: {
+          vehicles: true
+        }
+      }
+    }
+  });
+}
+
+export async function addVehicleForDriver(userId: string,
   vehicle: {
     type: VehicleType,
     model: string,
@@ -86,9 +85,18 @@ export function addVehicleForDriver(driverId:string,
     plate: string
   }
 ) {
+  // Get the driver profile ID from the user ID
+  const driverProfile = await db.driverProfile.findUnique({
+    where: { userId: userId }
+  });
+
+  if (!driverProfile) {
+    throw new Error('Driver profile not found');
+  }
+
   return db.vehicle.create({
     data: {
-      driverId: driverId,
+      driverId: driverProfile.id,
       type: vehicle.type,
       model: vehicle.model,
       plate: vehicle.plate,
@@ -97,30 +105,85 @@ export function addVehicleForDriver(driverId:string,
   })
 }
 
-export function updateVehicle(driverId: string,
-  vehicleId: string, 
-  vehicle:  Partial<{
+export async function updateVehicle(userId: string,
+  vehicleId: string,
+  vehicle: Partial<{
     model: string,
     type: VehicleType,
     year: number,
     plate: string
   }>) {
-    return db.vehicle.update({
-      where: {id: vehicleId, driverId:driverId},
-      data: vehicle
-    });
-}
+  // Get the driver profile ID from the user ID
+  const driverProfile = await db.driverProfile.findUnique({
+    where: { userId: userId }
+  });
 
-export function deleteVehicleForDriver(driverId:string,
-  vehicleId: string
-) {
-  return db.vehicle.delete({
-    where: {id: vehicleId, driverId:driverId}
+  if (!driverProfile) {
+    throw new Error('Driver profile not found');
+  }
+
+  // First verify the vehicle belongs to this driver
+  const existingVehicle = await db.vehicle.findUnique({
+    where: { id: vehicleId }
+  });
+
+  if (!existingVehicle) {
+    throw new Error('Vehicle not found');
+  }
+
+  if (existingVehicle.driverId !== driverProfile.id) {
+    throw new Error('Unauthorized: This vehicle does not belong to you');
+  }
+
+  // Now update the vehicle
+  return db.vehicle.update({
+    where: { id: vehicleId },
+    data: vehicle
   });
 }
 
-export function getAllVehiclesForDriver(driverId:string) {
+export async function deleteVehicleForDriver(userId: string,
+  vehicleId: string
+) {
+  // Get the driver profile ID from the user ID
+  const driverProfile = await db.driverProfile.findUnique({
+    where: { userId: userId }
+  });
+
+  if (!driverProfile) {
+    throw new Error('Driver profile not found');
+  }
+
+  // First verify the vehicle belongs to this driver
+  const existingVehicle = await db.vehicle.findUnique({
+    where: { id: vehicleId }
+  });
+
+  if (!existingVehicle) {
+    throw new Error('Vehicle not found');
+  }
+
+  if (existingVehicle.driverId !== driverProfile.id) {
+    throw new Error('Unauthorized: This vehicle does not belong to you');
+  }
+
+  // Now delete the vehicle
+  return db.vehicle.delete({
+    where: { id: vehicleId }
+  });
+}
+
+export async function getAllVehiclesForDriver(userId: string) {
+  // Get the driver profile ID from the user ID
+  const driverProfile = await db.driverProfile.findUnique({
+    where: { userId: userId }
+  });
+
+  if (!driverProfile) {
+    throw new Error('Driver profile not found');
+  }
+
   return db.vehicle.findMany({
-    where: {driverId: driverId}
+    where: { driverId: driverProfile.id }
   });
 }

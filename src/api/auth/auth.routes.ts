@@ -17,68 +17,68 @@ const router = express.Router();
 const userPhotoUpload = createUploader("users");
 
 router.post('/register',
-  userPhotoUpload.single('photo'), 
-  async (req, res, next) => {
-  try {
-    const { 
-      email, 
-      password, 
-      phoneNumber, 
-      firstName, 
-      lastName, 
-      sex, 
-      dateOfBirth, 
-      address, 
-      wilaya, 
-      commune 
-    } = req.body;
-
-    if (!email || !password || !phoneNumber) {
-      res.status(400);
-      throw new Error('You must provide an email, a phone number and a password.');
-    }
-
-    const existingUser = await findUserByEmail(email);
-
-    if (existingUser) {
-      res.status(400);
-      throw new Error('Email already in use.');
-    }
-    const photoUrl = req.file ? `uploads/users/${req.file.filename}` : null;
-
-    const user = await createUserByEmailAndPassword({
-       email, 
-       password,
-       role: Role.USER,
-       photo: photoUrl? photoUrl : "",
-       address,
-       phoneNumber,
-       firstName,
-       lastName,
-       sex,
-       dateOfBirth,
-       wilaya,
-       commune
-      });
-    const { accessToken, refreshToken } = generateTokens(user);
-    await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
-
-    res.json({
-      accessToken,
-      refreshToken,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-
-router.post( '/register-driver', 
-  userPhotoUpload.single('photo'), 
+  userPhotoUpload.single('photo'),
   async (req, res, next) => {
     try {
-      let body:any = {}
-      var vehicle:Vehicle ={
+      const {
+        email,
+        password,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
+        address,
+        wilaya,
+        commune
+      } = req.body;
+
+      if (!email || !password || !phoneNumber) {
+        res.status(400);
+        throw new Error('You must provide an email, a phone number and a password.');
+      }
+
+      const existingUser = await findUserByEmail(email);
+
+      if (existingUser) {
+        res.status(400);
+        throw new Error('Email already in use.');
+      }
+      const photoUrl = req.file ? `uploads/users/${req.file.filename}` : null;
+
+      const user = await createUserByEmailAndPassword({
+        email,
+        password,
+        role: Role.USER,
+        photo: photoUrl ? photoUrl : "",
+        address,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
+        wilaya,
+        commune
+      });
+      const { accessToken, refreshToken } = generateTokens(user);
+      await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
+
+      res.json({
+        accessToken,
+        refreshToken,
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+
+router.post('/register-driver',
+  userPhotoUpload.single('photo'),
+  async (req, res, next) => {
+    try {
+      let body: any = {}
+      var vehicle: Vehicle = {
         id: '',
         driverId: '',
         type: 'CAR',
@@ -87,7 +87,7 @@ router.post( '/register-driver',
         plate: '',
         isActive: false
       }
-      if (process.env.NODE_ENV === "development"){
+      if (process.env.NODE_ENV === "development") {
         const rebuilt = {};
         for (const [key, value] of Object.entries(req.body)) {
           objectPath.set(rebuilt, key, value);
@@ -97,7 +97,7 @@ router.post( '/register-driver',
         vehicle.year = parseInt(body.vehicle.year)
         console.log(vehicle)
       }
-      const { 
+      const {
         email,
         password,
         phoneNumber,
@@ -113,7 +113,7 @@ router.post( '/register-driver',
       if (!email || !password) {
         res.status(400);
         throw new Error('You must provide an email and a password.');
-      } 
+      }
       //TODO: is Vehicle validation a need on backend ?.
 
       const existingUser = await findUserByEmail(email);
@@ -134,7 +134,7 @@ router.post( '/register-driver',
         address,
         wilaya,
         commune,
-        photo: photoUrl? photoUrl :  "",
+        photo: photoUrl ? photoUrl : "",
         vehicle
       });
       const { accessToken, refreshToken } = generateTokens(driver);
@@ -149,7 +149,7 @@ router.post( '/register-driver',
       next(error)
     }
   }
- 
+
 )
 
 router.post('/login', async (req, res, next) => {
@@ -243,38 +243,38 @@ router.post('/revokeRefreshTokens', async (req, res, next) => {
 });
 
 
-router.post("/forgot-password", async (req,res,next) => {
-    try{
+router.post("/forgot-password", async (req, res, next) => {
+  try {
 
-      const { email } = req.body;
+    const { email } = req.body;
 
-      const user = await findUserByEmail(email); 
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      const token = crypto.randomBytes(32).toString("hex");
-      const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 min expiry
-      await createPasswordResetToken(
-        token, 
-        user.id,
-        expiresAt
-      )
-
-      //TODO: send token via email.
-      console.log(`Reset link: http://localhost:3000/reset-password?token=${token}`);
-
-      res.json({ 
-        message: "Reset link sent to email (check console for now)" 
-      });
-    }catch(err){
-      next(err);
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 min expiry
+    await createPasswordResetToken(
+      token,
+      user.id,
+      expiresAt
+    )
+
+    //TODO: send token via email.
+    console.log(`Reset link: http://localhost:3000/reset-password?token=${token}`);
+
+    res.json({
+      message: "Reset link sent to email (check console for now)"
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 
-router.post("/reset-password", async (req, res,next ) => {
-  try{
+router.post("/reset-password", async (req, res, next) => {
+  try {
 
     const { token, newPassword } = req.body;
 
@@ -292,12 +292,12 @@ router.post("/reset-password", async (req, res,next ) => {
     const user = await findUserById(resetToken.userId);
     const pwd = user?.password;
     const isSamePassword = await bcrypt.compare(
-      newPassword, 
+      newPassword,
       pwd ? pwd : ""
     );
-    if (isSamePassword){
-      return res.status(400).json({ 
-        error: "Must use a different password`" 
+    if (isSamePassword) {
+      return res.status(400).json({
+        error: "Must use a different password`"
       });
     }
 
@@ -309,7 +309,7 @@ router.post("/reset-password", async (req, res,next ) => {
 
     res.json({ message: "Password reset successfully" });
   }
-  catch (err){
+  catch (err) {
     next(err)
   }
 });
