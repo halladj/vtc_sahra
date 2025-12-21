@@ -24,7 +24,7 @@ router.get('/profile', isAuthenticated, async (
     }
 
     const photoUrl = user.photo
-      ? `${req.protocol}://${req.get("host")}/${user.photo}`
+      ? `${req.protocol}://${req.get("host")}/${user.photo.replace(/^\//, '')}`
       : null;
 
     // res.json(user);

@@ -23,7 +23,7 @@ router.get('/profile', isAuthenticated, async (
     }
 
     const photoUrl = user.photo
-      ? `${req.protocol}://${req.get("host")}${user.photo}`
+      ? `${req.protocol}://${req.get("host")}/${user.photo.replace(/^\//, '')}`
       : null;
 
     // res.json(user);
@@ -45,7 +45,7 @@ router.put("/photo",
     try {
       const { userId } = req.payload!;
 
-      const photoUrl = req.file ? `/uploads/users/${req.file.filename}` : null;
+      const photoUrl = req.file ? `uploads/users/${req.file.filename}` : null;
       console.log(photoUrl)
 
       const user = await updateUserPhoto(
@@ -56,7 +56,7 @@ router.put("/photo",
 
       // Return the full URL in the response
       const fullPhotoUrl = user.photo
-        ? `${req.protocol}://${req.get("host")}${user.photo}`
+        ? `${req.protocol}://${req.get("host")}/${user.photo.replace(/^\//, '')}`
         : null;
 
       res.json({
@@ -76,7 +76,7 @@ router.put("/profile", isAuthenticated,
       const updatedUser = await updateUser(userId, req.body);
 
       const photoUrl = updatedUser.photo
-        ? `${req.protocol}://${req.get("host")}${updatedUser.photo}`
+        ? `${req.protocol}://${req.get("host")}/${updatedUser.photo.replace(/^\//, '')}`
         : null;
 
       // res.json(user);
