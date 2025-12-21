@@ -53,7 +53,16 @@ router.put("/photo",
         photoUrl ? photoUrl : ""
       );
       console.log(user)
-      res.json(user);
+
+      // Return the full URL in the response
+      const fullPhotoUrl = user.photo
+        ? `${req.protocol}://${req.get("host")}${user.photo}`
+        : null;
+
+      res.json({
+        ...user,
+        photo: fullPhotoUrl
+      });
     } catch (err) {
       next(err);
     }
