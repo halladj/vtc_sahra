@@ -1,0 +1,523 @@
+{
+    "info": {
+        "name": "Ride API",
+        "description": "Complete API collection for ride management including creation, acceptance, status updates, and cancellation",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000/api",
+            "type": "string"
+        },
+        {
+            "key": "passengerToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "driverToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "rideId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "vehicleId",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Create Ride",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 201) {",
+                            "    const response = pm.response.json();",
+                            "    pm.collectionVariables.set('rideId', response.id);",
+                            "    pm.test('Ride created successfully', function() {",
+                            "        pm.expect(response.status).to.equal('PENDING');",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"type\": \"REGULAR\",\n  \"origin\": \"123 Main Street, Algiers\",\n  \"destination\": \"456 Park Avenue, Oran\",\n  \"distanceKm\": 10.5,\n  \"durationMin\": 25,\n  \"price\": 500\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides"
+                    ]
+                },
+                "description": "Create a new ride request. Requires authentication."
+            },
+            "response": []
+        },
+        {
+            "name": "Create Seat Reserve Ride",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"type\": \"SEAT_RESERVE\",\n  \"origin\": \"Airport Terminal 1, Algiers\",\n  \"destination\": \"Hotel Marriott, Oran\",\n  \"distanceKm\": 15.2,\n  \"durationMin\": 35,\n  \"price\": 800,\n  \"seatCount\": 3\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides"
+                    ]
+                },
+                "description": "Create a seat reserve ride with fixed price. Requires seatCount."
+            },
+            "response": []
+        },
+        {
+            "name": "Create Delivery Ride",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"type\": \"DELIVERY\",\n  \"origin\": \"Warehouse A, Algiers\",\n  \"destination\": \"Store B, Oran\",\n  \"distanceKm\": 8.3,\n  \"durationMin\": 20,\n  \"price\": 350,\n  \"packageWeight\": 5.5\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides"
+                    ]
+                },
+                "description": "Create a delivery ride. Requires packageWeight in kg."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Pending Rides",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/pending",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "pending"
+                    ]
+                },
+                "description": "Get all pending rides available for drivers to accept. Requires DRIVER role."
+            },
+            "response": []
+        },
+        {
+            "name": "Get User Rides",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/user",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "user"
+                    ]
+                },
+                "description": "Get all rides for the authenticated user (as passenger)."
+            },
+            "response": []
+        },
+        {
+            "name": "Get User Rides (Filtered by Status)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/user?status=COMPLETED",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "user"
+                    ],
+                    "query": [
+                        {
+                            "key": "status",
+                            "value": "COMPLETED",
+                            "description": "Filter by status: PENDING, ACCEPTED, ONGOING, COMPLETED, CANCELLED"
+                        }
+                    ]
+                },
+                "description": "Get user rides filtered by status."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Driver Rides",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/driver",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "driver"
+                    ]
+                },
+                "description": "Get all rides for the authenticated driver. Requires DRIVER role."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Driver Rides (Filtered by Status)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/driver?status=ONGOING",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "driver"
+                    ],
+                    "query": [
+                        {
+                            "key": "status",
+                            "value": "ONGOING",
+                            "description": "Filter by status: PENDING, ACCEPTED, ONGOING, COMPLETED, CANCELLED"
+                        }
+                    ]
+                },
+                "description": "Get driver rides filtered by status."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Ride Details",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}"
+                    ]
+                },
+                "description": "Get details of a specific ride. Only accessible by passenger or driver of the ride."
+            },
+            "response": []
+        },
+        {
+            "name": "Accept Ride",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    const response = pm.response.json();",
+                            "    pm.test('Ride accepted successfully', function() {",
+                            "        pm.expect(response.status).to.equal('ACCEPTED');",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"vehicleId\": \"{{vehicleId}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}/accept",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}",
+                        "accept"
+                    ]
+                },
+                "description": "Accept a pending ride. Requires DRIVER role and valid vehicleId."
+            },
+            "response": []
+        },
+        {
+            "name": "Start Ride (Update to ONGOING)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"status\": \"ONGOING\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}/status",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}",
+                        "status"
+                    ]
+                },
+                "description": "Start an accepted ride by updating status to ONGOING."
+            },
+            "response": []
+        },
+        {
+            "name": "Complete Ride",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}/status",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}",
+                        "status"
+                    ]
+                },
+                "description": "Complete an ongoing ride. Automatically creates 15% commission."
+            },
+            "response": []
+        },
+        {
+            "name": "Cancel Ride (Passenger)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}/cancel",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}",
+                        "cancel"
+                    ]
+                },
+                "description": "Cancel a ride as passenger. Cannot cancel completed rides."
+            },
+            "response": []
+        },
+        {
+            "name": "Cancel Ride (Driver)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{driverToken}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}/cancel",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}",
+                        "cancel"
+                    ]
+                },
+                "description": "Cancel a ride as driver. Cannot cancel completed rides."
+            },
+            "response": []
+        },
+        {
+            "name": "Update Ride Details",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{passengerToken}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"origin\": \"Updated Origin Address\",\n  \"destination\": \"Updated Destination Address\",\n  \"price\": 600,\n  \"distanceKm\": 12.0,\n  \"durationMin\": 30\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/rides/{{rideId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "rides",
+                        "{{rideId}}"
+                    ]
+                },
+                "description": "Update ride details. Only works for PENDING rides and only by the passenger."
+            },
+            "response": []
+        }
+    ]
+}
