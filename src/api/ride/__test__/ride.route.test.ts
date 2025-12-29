@@ -497,4 +497,131 @@ describe("Ride Routes", () => {
             expect(res.body.price).toBe(600);
         });
     });
+
+    describe("Payment Integration Tests", () => {
+        const paymentServices = require("../ride.payment.services");
+
+        describe("Ride Completion with Payment", () => {
+            it("should process payment when completing a ride", async () => {
+                const mockRide = {
+                    id: "ride-123",
+                    userId: "passenger-123",
+                    driverId: "driver-123",
+                    status: RideStatus.ONGOING,
+                    price: 100000,
+                };
+
+                const updatedRide = {
+                    ...mockRide,
+                    status: RideStatus.COMPLETED,
+                };
+
+                (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+                (db.ride.update as jest.Mock).mockResolvedValue(updatedRide);
+                (paymentServices.processRidePayment as jest.Mock).mockResolvedValue({
+                    passengerBalance: 50000,
+                    driverBalance: 135000,
+                    commission: { amount: 15000 },
+                });
+
+                const token = generateToken(passengerPayload);
+                const res = await request(app)
+                    .put("/rides/ride-123/status")
+                    .set("Authorization", `Bearer ${token}`)
+                    .send({ status: RideStatus.COMPLETED });
+
+                expect(res.status).toBe(200);
+                expect(paymentServices.processRidePayment).toHaveBeenCalledWith(
+                    "ride-123",
+                    "passenger-123",
+                    "driver-123",
+                    100000
+                );
+            });
+
+            it("should return 402 when passenger has insufficient balance", async () => {
+                const mockRide = {
+                    id: "ride-123",
+                    userId: "passenger-123",
+                    driverId: "driver-123",
+                    status: RideStatus.ONGOING,
+                    price: 100000,
+                };
+
+                (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+                (paymentServices.processRidePayment as jest.Mock).mockRejectedValue(
+                    new Error("Insufficient balance to complete ride")
+                );
+
+                const token = generateToken(passengerPayload);
+                const res = await request(app)
+                    .put("/rides/ride-123/status")
+                    .set("Authorization", `Bearer ${token}`)
+                    .send({ status: RideStatus.COMPLETED });
+
+                expect(res.status).toBe(402);
+                expect(res.body.error).toBe("Insufficient balance to complete ride");
+                expect(res.body.code).toBe("INSUFFICIENT_BALANCE");
+            });
+        });
+
+        describe("Driver Cancellation with Penalty", () => {
+            it("should apply penalty when driver cancels accepted ride", async () => {
+                const mockRide = {
+                    id: "ride-123",
+                    userId: "passenger-123",
+                    driverId: "driver-123",
+                    status: RideStatus.ACCEPTED,
+                    price: 100000,
+                };
+
+                const cancelledRide = {
+                    ...mockRide,
+                    status: RideStatus.CANCELLED,
+                };
+
+                (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+                (db.ride.update as jest.Mock).mockResolvedValue(cancelledRide);
+                (paymentServices.processDriverCancellationPenalty as jest.Mock).mockResolvedValue({
+                    penaltyCharged: 10000,
+                    driverBalance: 40000,
+                });
+
+                const token = generateToken(driverPayload);
+                const res = await request(app)
+                    .put("/rides/ride-123/cancel")
+                    .set("Authorization", `Bearer ${token}`);
+
+                expect(res.status).toBe(200);
+                expect(paymentServices.processDriverCancellationPenalty).toHaveBeenCalledWith(
+                    "ride-123",
+                    "driver-123",
+                    100000
+                );
+            });
+
+            it("should not apply penalty when passenger cancels ride", async () => {
+                const mockRide = {
+                    id: "ride-123",
+                    userId: "passenger-123",
+                    driverId: "driver-123",
+                    status: RideStatus.ACCEPTED,
+                    price: 100000,
+                };
+
+                (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+                (db.ride.update as jest.Mock).mockResolvedValue({
+                    ...mockRide,
+                    status: RideStatus.CANCELLED,
+                });
+
+                const token = generateToken(passengerPayload);
+                await request(app)
+                    .put("/rides/ride-123/cancel")
+                    .set("Authorization", `Bearer ${token}`);
+
+                expect(paymentServices.processDriverCancellationPenalty).not.toHaveBeenCalled();
+            });
+        });
+    });
 });
