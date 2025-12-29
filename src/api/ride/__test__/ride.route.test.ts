@@ -26,6 +26,12 @@ jest.mock("../../../utils/db", () => ({
     },
 }));
 
+// Mock payment services
+jest.mock("../ride.payment.services", () => ({
+    processRidePayment: jest.fn(),
+    processDriverCancellationPenalty: jest.fn(),
+}));
+
 // Mock environment
 process.env.JWT_ACCESS_SECRET = "testsecret";
 
