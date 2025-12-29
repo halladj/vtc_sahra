@@ -81,7 +81,7 @@ model User {
 
   refreshTokens RefreshToken[]
 
-  Wallet Wallet[]
+  Wallet Wallet?
 
   rides         Ride[]       @relation("PassengerRides")
   driverRides   Ride[]       @relation("DriverRides")
