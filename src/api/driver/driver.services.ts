@@ -25,40 +25,54 @@ export function createDriverByEmailAndPassword(user:
 
   }) {
   user.password = bcrypt.hashSync(user.password, 12);
-  return db.user.create({
-    data: {
-      email: user.email,
-      password: user.password,
-      phoneNumber: user.phoneNumber,
-      role: Role.DRIVER,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      sex: user.sex,
-      dateOfBirth: user.dateOfBirth,
-      photo: user.photo,
-      address: user.address,
-      wilaya: user.wilaya,
-      commune: user.commune,
-      driverProfile: {
-        create: {
-          vehicles: {
-            create: [{
-              type: user.vehicle.type,
-              model: user.vehicle.model,
-              year: user.vehicle.year,
-              plate: user.vehicle.plate,
-            }]
+
+  // Create driver, driver profile, vehicle, and wallet in a transaction
+  return db.$transaction(async (tx) => {
+    const newDriver = await tx.user.create({
+      data: {
+        email: user.email,
+        password: user.password,
+        phoneNumber: user.phoneNumber,
+        role: Role.DRIVER,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        sex: user.sex,
+        dateOfBirth: user.dateOfBirth,
+        photo: user.photo,
+        address: user.address,
+        wilaya: user.wilaya,
+        commune: user.commune,
+        driverProfile: {
+          create: {
+            vehicles: {
+              create: [{
+                type: user.vehicle.type,
+                model: user.vehicle.model,
+                year: user.vehicle.year,
+                plate: user.vehicle.plate,
+              }]
+            }
+          }
+        }
+      },
+      include: {
+        driverProfile: {
+          include: {
+            vehicles: true
           }
         }
       }
-    },
-    include: {
-      driverProfile: {
-        include: {
-          vehicles: true
-        }
-      }
-    }
+    });
+
+    // Create wallet for the new driver
+    await tx.wallet.create({
+      data: {
+        userId: newDriver.id,
+        balance: 0,
+      },
+    });
+
+    return newDriver;
   });
 }
 

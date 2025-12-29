@@ -1,8 +1,8 @@
-import {Role, Sex, User} from "@prisma/client";
+import { Role, Sex, User } from "@prisma/client";
 import bcrypt from 'bcrypt';
-import {db} from '../../utils/db';
+import { db } from '../../utils/db';
 
-export function findUserByEmail(email:string) {
+export function findUserByEmail(email: string) {
   return db.user.findUnique({
     where: {
       email,
@@ -26,12 +26,26 @@ export function createUserByEmailAndPassword(user:
     commune?: string;
   }) {
   user.password = bcrypt.hashSync(user.password, 12);
-  return db.user.create({
-    data: user,
+
+  // Create user and wallet in a transaction
+  return db.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: user,
+    });
+
+    // Create wallet for the new user
+    await tx.wallet.create({
+      data: {
+        userId: newUser.id,
+        balance: 0,
+      },
+    });
+
+    return newUser;
   });
 }
 
-export function findUserById(id:any) {
+export function findUserById(id: any) {
   return db.user.findUnique({
     where: {
       id,
@@ -40,24 +54,24 @@ export function findUserById(id:any) {
 }
 
 export function updateUsersPassword(
-  userId:string, 
-  hashedPassword:string) {
-    return db.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
+  userId: string,
+  hashedPassword: string) {
+  return db.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
 }
 
-export function updateUserPhoto(userId:string, photoUrl:string) {
+export function updateUserPhoto(userId: string, photoUrl: string) {
   return db.user.update({
-    where: {id: userId},
-    data: {photo: photoUrl}
+    where: { id: userId },
+    data: { photo: photoUrl }
   })
 }
 
 
 export function updateUser(
-  userId: string, 
+  userId: string,
   data: Partial<{
     firstName: string;
     lastName: string;
@@ -70,7 +84,7 @@ export function updateUser(
   }>
 ) {
   return db.user.update({
-    where: {id: userId},
+    where: { id: userId },
     data
   });
 }
