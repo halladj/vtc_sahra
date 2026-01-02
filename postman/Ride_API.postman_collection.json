@@ -774,6 +774,118 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Ratings",
+            "item": [
+                {
+                    "name": "Create Rating",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{passengerToken}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rideId\": \"{{rideId}}\",\n  \"score\": 5,\n  \"comment\": \"Excellent driver! Very professional and safe.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ratings",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ratings"
+                            ]
+                        },
+                        "description": "Rate a completed ride. Only the passenger can rate. Score must be 1-5 stars."
+                    }
+                },
+                {
+                    "name": "Get Rating for Ride",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{passengerToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/ratings/ride/{{rideId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ratings",
+                                "ride",
+                                "{{rideId}}"
+                            ]
+                        },
+                        "description": "Get rating for a specific ride. Only accessible by passenger or driver of the ride."
+                    }
+                },
+                {
+                    "name": "Get Driver Ratings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{passengerToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/ratings/driver/driver-id-here",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ratings",
+                                "driver",
+                                "driver-id-here"
+                            ]
+                        },
+                        "description": "Get all ratings for a specific driver. Returns array of ratings with ride details."
+                    }
+                },
+                {
+                    "name": "Get Driver Average Rating",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{passengerToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/ratings/driver/driver-id-here/average",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ratings",
+                                "driver",
+                                "driver-id-here",
+                                "average"
+                            ]
+                        },
+                        "description": "Get driver's average rating and total count. Returns { average: 4.5, count: 10 }"
+                    }
+                }
+            ]
         }
     ]
 }
