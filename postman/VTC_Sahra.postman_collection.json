@@ -1,0 +1,831 @@
+{
+    "info": {
+        "_postman_id": "vtc-sahra-collection",
+        "name": "VTC Sahra",
+        "description": "Complete API collection for VTC Sahra ride-hailing platform with wallet, gift cards, and payment integration",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newuser@vtc.dz\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+213555000099\",\n  \"address\": \"123 Main Street\",\n  \"wilaya\": \"Algiers\",\n  \"commune\": \"Hydra\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Register a new user account. Automatically creates a wallet with 0 balance."
+                    }
+                },
+                {
+                    "name": "Register Driver",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newdriver@vtc.dz\",\n  \"password\": \"password123\",\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Driver\",\n  \"phoneNumber\": \"+213555000088\",\n  \"address\": \"456 Driver Ave\",\n  \"wilaya\": \"Oran\",\n  \"commune\": \"Es Senia\",\n  \"vehicleType\": \"CAR\",\n  \"vehicleModel\": \"Renault Symbol\",\n  \"vehicleYear\": 2021,\n  \"vehiclePlate\": \"16-1234-16\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register-driver",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register-driver"
+                            ]
+                        },
+                        "description": "Register a new driver account with vehicle. Automatically creates a wallet."
+                    }
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const response = pm.response.json();",
+                                    "if (response.accessToken) {",
+                                    "    pm.environment.set('access_token', response.accessToken);",
+                                    "    pm.environment.set('refresh_token', response.refreshToken);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"user1@vtc.dz\",\n  \"password\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login and receive access token. Token is automatically saved to environment."
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/refresh",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "refresh"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Wallet",
+            "item": [
+                {
+                    "name": "Get My Wallet",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/wallet",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet"
+                            ]
+                        },
+                        "description": "Get authenticated user's wallet with balance and transaction history"
+                    }
+                },
+                {
+                    "name": "Get Transaction History",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/wallet/transactions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "transactions"
+                            ]
+                        },
+                        "description": "Get all transactions for authenticated user's wallet"
+                    }
+                },
+                {
+                    "name": "Credit Wallet (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": \"user-id-here\",\n  \"amount\": 50000,\n  \"reference\": \"Admin top-up\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/wallet/credit",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "credit"
+                            ]
+                        },
+                        "description": "Credit a user's wallet (Admin only). Amount in cents (50000 = 500 DA)"
+                    }
+                },
+                {
+                    "name": "Debit Wallet (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": \"user-id-here\",\n  \"amount\": 10000,\n  \"reference\": \"Admin deduction\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/wallet/debit",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "debit"
+                            ]
+                        },
+                        "description": "Debit a user's wallet (Admin only). Amount in cents (10000 = 100 DA)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Gift Cards",
+            "item": [
+                {
+                    "name": "Create Gift Card (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 100000,\n  \"code\": \"GIFT-CUSTOM-2024\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/giftcards",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "giftcards"
+                            ]
+                        },
+                        "description": "Create a gift card (Admin only). Code is optional - auto-generated if not provided. Amount in cents."
+                    }
+                },
+                {
+                    "name": "Get All Gift Cards (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/giftcards",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "giftcards"
+                            ]
+                        },
+                        "description": "Get all gift cards (Admin only). Shows unused cards first."
+                    }
+                },
+                {
+                    "name": "Get Gift Card by Code (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/giftcards/GIFT-1000-ABC123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "giftcards",
+                                "GIFT-1000-ABC123"
+                            ]
+                        },
+                        "description": "Get specific gift card details (Admin only)"
+                    }
+                },
+                {
+                    "name": "Redeem Gift Card",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"GIFT-1000-ABC123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/giftcards/redeem",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "giftcards",
+                                "redeem"
+                            ]
+                        },
+                        "description": "Redeem a gift card. Credits the authenticated user's wallet."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Rides",
+            "item": [
+                {
+                    "name": "Create Ride",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"STANDARD\",\n  \"origin\": \"Hydra, Algiers\",\n  \"destination\": \"Airport, Algiers\",\n  \"distanceKm\": 15,\n  \"durationMin\": 25,\n  \"price\": 50000\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/rides",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides"
+                            ]
+                        },
+                        "description": "Create a new ride request. Price in cents (50000 = 500 DA)"
+                    }
+                },
+                {
+                    "name": "Get My Rides",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/user?status=PENDING",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                "user"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "PENDING",
+                                    "description": "Optional: PENDING, ACCEPTED, ONGOING, COMPLETED, CANCELLED"
+                                }
+                            ]
+                        },
+                        "description": "Get all rides for authenticated user (passenger)"
+                    }
+                },
+                {
+                    "name": "Get Pending Rides (Driver)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                "pending"
+                            ]
+                        },
+                        "description": "Get all pending rides available for drivers to accept"
+                    }
+                },
+                {
+                    "name": "Get Driver Rides",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/driver",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                "driver"
+                            ]
+                        },
+                        "description": "Get all rides for authenticated driver"
+                    }
+                },
+                {
+                    "name": "Get Ride Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/:rideId",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                ":rideId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "rideId",
+                                    "value": "ride-id-here"
+                                }
+                            ]
+                        },
+                        "description": "Get details of a specific ride"
+                    }
+                },
+                {
+                    "name": "Accept Ride (Driver)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"vehicleId\": \"vehicle-id-here\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/:rideId/accept",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                ":rideId",
+                                "accept"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "rideId",
+                                    "value": "ride-id-here"
+                                }
+                            ]
+                        },
+                        "description": "Driver accepts a pending ride"
+                    }
+                },
+                {
+                    "name": "Update Ride Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"ONGOING\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/:rideId/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                ":rideId",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "rideId",
+                                    "value": "ride-id-here"
+                                }
+                            ]
+                        },
+                        "description": "Update ride status. ONGOING to start, COMPLETED to finish (processes payment)"
+                    }
+                },
+                {
+                    "name": "Complete Ride (Process Payment)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/:rideId/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                ":rideId",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "rideId",
+                                    "value": "ride-id-here"
+                                }
+                            ]
+                        },
+                        "description": "Complete ride. Debits passenger, credits driver (minus 15% commission). Returns 402 if insufficient balance."
+                    }
+                },
+                {
+                    "name": "Cancel Ride",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rides/:rideId/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rides",
+                                ":rideId",
+                                "cancel"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "rideId",
+                                    "value": "ride-id-here"
+                                }
+                            ]
+                        },
+                        "description": "Cancel a ride. Driver cancellation of ACCEPTED/ONGOING ride incurs 10% penalty."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get My Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/users/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"address\": \"New Address\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/users/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Drivers",
+            "item": [
+                {
+                    "name": "Get Driver Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/drivers/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "drivers",
+                                "profile"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Driver Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"isOnline\": true,\n  \"lat\": 36.7538,\n  \"lng\": 3.0588\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/drivers/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "drivers",
+                                "status"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "refresh_token",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
