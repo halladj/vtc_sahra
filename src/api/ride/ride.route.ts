@@ -242,7 +242,14 @@ router.put(
 
             const ride = await updateRideStatus(rideId, status, userId);
             res.json(ride);
-        } catch (error) {
+        } catch (error: any) {
+            // Handle insufficient balance error
+            if (error.message === "Insufficient balance to complete ride") {
+                return res.status(402).json({
+                    error: error.message,
+                    code: "INSUFFICIENT_BALANCE"
+                });
+            }
             next(error);
         }
     }

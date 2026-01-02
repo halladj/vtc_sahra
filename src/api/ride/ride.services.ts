@@ -1,5 +1,6 @@
 import { RideStatus, RideType } from "@prisma/client";
 import { db } from "../../utils/db";
+import { processRidePayment, processDriverCancellationPenalty } from "./ride.payment.services";
 
 /**
  * Create a new ride for a passenger
@@ -281,18 +282,14 @@ export async function updateRideStatus(
         },
     });
 
-    // If ride is completed, create commission
-    if (status === RideStatus.COMPLETED && ride.driverId) {
-        const commissionPercent = 0.15; // 15% commission
-        const commissionAmount = Math.floor(ride.price * commissionPercent);
-
-        await db.commission.create({
-            data: {
-                rideId: rideId,
-                percent: commissionPercent,
-                amount: commissionAmount,
-            },
-        });
+    // If ride is completed, process payment
+    if (status === RideStatus.COMPLETED && ride.status === RideStatus.ONGOING && ride.driverId) {
+        await processRidePayment(
+            rideId,
+            ride.userId,
+            ride.driverId,
+            ride.price
+        );
     }
 
     return updatedRide;
@@ -318,6 +315,14 @@ export async function cancelRide(rideId: string, userId: string) {
     // Can't cancel completed rides
     if (ride.status === RideStatus.COMPLETED) {
         throw new Error("Cannot cancel a completed ride");
+    }
+
+    // Apply cancellation penalty if driver cancels accepted/ongoing ride
+    if (
+        ride.driverId === userId &&
+        (ride.status === RideStatus.ACCEPTED || ride.status === RideStatus.ONGOING)
+    ) {
+        await processDriverCancellationPenalty(rideId, ride.driverId, ride.price);
     }
 
     return db.ride.update({
