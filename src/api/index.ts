@@ -5,6 +5,7 @@ import drivers from "./driver/driver.route";
 import rides from "./ride/ride.route";
 import wallet from "./wallet/wallet.route";
 import giftcards from "./giftcard/giftcard.route";
+import ratings from "./rating/rating.route";
 
 const router = express.Router();
 
@@ -25,5 +26,7 @@ router.use('/rides', rides);
 router.use('/wallet', wallet);
 
 router.use('/giftcards', giftcards);
+
+router.use('/ratings', ratings);
 
 export = router;
