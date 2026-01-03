@@ -12,6 +12,7 @@ import {
     cancelRide,
     updateRide,
 } from "./ride.services";
+import { estimateRidePrice, getRidePriceBreakdown } from "./ride.pricing.services";
 import { Role, RideStatus, RideType } from "@prisma/client";
 
 const router = express.Router();
@@ -19,6 +20,70 @@ const router = express.Router();
 interface AuthenticatedRequest extends Request {
     payload?: JwtPayload;
 }
+
+/**
+ * POST /rides/estimate - Estimate price for a ride (anyone can call this)
+ */
+router.post(
+    "/estimate",
+    async (req: Request, res: Response, next: any) => {
+        try {
+            const {
+                type,
+                distanceKm,
+                durationMin,
+                seatCount,
+                packageWeight,
+                origin,
+                destination,
+            }: {
+                type: RideType;
+                distanceKm?: number;
+                durationMin?: number;
+                seatCount?: number;
+                packageWeight?: number;
+                origin?: string;
+                destination?: string;
+            } = req.body;
+
+            // Validation
+            if (!type) {
+                return res.status(400).json({
+                    error: "Missing required field: type",
+                });
+            }
+
+            // Get price estimation
+            const estimatedPrice = estimateRidePrice({
+                type,
+                ...(distanceKm !== undefined && { distanceKm }),
+                ...(durationMin !== undefined && { durationMin }),
+                ...(seatCount !== undefined && { seatCount }),
+                ...(packageWeight !== undefined && { packageWeight }),
+                ...(origin !== undefined && { origin }),
+                ...(destination !== undefined && { destination }),
+            });
+
+            // Get detailed breakdown
+            const breakdown = getRidePriceBreakdown({
+                type,
+                ...(distanceKm !== undefined && { distanceKm }),
+                ...(durationMin !== undefined && { durationMin }),
+                ...(seatCount !== undefined && { seatCount }),
+                ...(packageWeight !== undefined && { packageWeight }),
+                ...(origin !== undefined && { origin }),
+                ...(destination !== undefined && { destination }),
+            });
+
+            res.json({
+                estimatedPrice,
+                breakdown,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 /**
  * POST /rides - Create a new ride (passengers only)
@@ -83,7 +148,14 @@ router.post(
             });
 
             res.status(201).json(ride);
-        } catch (error) {
+        } catch (error: any) {
+            // Handle insufficient balance error
+            if (error.message === "Insufficient balance to create ride") {
+                return res.status(402).json({
+                    error: error.message,
+                    code: "INSUFFICIENT_BALANCE"
+                });
+            }
             next(error);
         }
     }

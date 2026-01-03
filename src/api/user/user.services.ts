@@ -33,11 +33,11 @@ export function createUserByEmailAndPassword(user:
       data: user,
     });
 
-    // Create wallet for the new user
+    // Create wallet for the new user with 1000 DA bonus
     await tx.wallet.create({
       data: {
         userId: newUser.id,
-        balance: 0,
+        balance: 1000,
       },
     });
 

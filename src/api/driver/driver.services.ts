@@ -64,11 +64,11 @@ export function createDriverByEmailAndPassword(user:
       }
     });
 
-    // Create wallet for the new driver
+    // Create wallet for the new driver with 1000 DA bonus
     await tx.wallet.create({
       data: {
         userId: newDriver.id,
-        balance: 0,
+        balance: 1000,
       },
     });
 

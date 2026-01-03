@@ -16,6 +16,19 @@ export async function createRide(data: {
     seatCount?: number;
     packageWeight?: number;
 }) {
+    // Check if user has sufficient balance before creating ride
+    const wallet = await db.wallet.findUnique({
+        where: { userId: data.userId },
+    });
+
+    if (!wallet) {
+        throw new Error("Wallet not found for user");
+    }
+
+    if (wallet.balance < data.price) {
+        throw new Error("Insufficient balance to create ride");
+    }
+
     return db.ride.create({
         data: {
             userId: data.userId,
