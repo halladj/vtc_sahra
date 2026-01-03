@@ -93,8 +93,19 @@ router.post('/register-driver',
           objectPath.set(rebuilt, key, value);
         }
         body = rebuilt;
+
+        // Validate vehicle object exists
+        if (!body.vehicle) {
+          res.status(400);
+          throw new Error('Vehicle information is required for driver registration.');
+        }
+
         vehicle = body.vehicle;
-        vehicle.year = parseInt(body.vehicle.year)
+
+        // Safely parse year with validation
+        if (body.vehicle.year) {
+          vehicle.year = parseInt(body.vehicle.year);
+        }
         console.log(vehicle)
       }
       const {
