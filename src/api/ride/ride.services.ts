@@ -9,8 +9,10 @@ import { processDriverCommission, processDriverCancellationPenalty } from "./rid
 export async function createRide(data: {
     userId: string;
     type: RideType;
-    origin: string;
-    destination: string;
+    originLat: number;
+    originLng: number;
+    destLat: number;
+    destLng: number;
     distanceKm?: number;
     durationMin?: number;
     price: number;
@@ -21,8 +23,10 @@ export async function createRide(data: {
         data: {
             userId: data.userId,
             type: data.type,
-            origin: data.origin,
-            destination: data.destination,
+            originLat: data.originLat,
+            originLng: data.originLng,
+            destLat: data.destLat,
+            destLng: data.destLng,
             distanceKm: data.distanceKm ?? null,
             durationMin: data.durationMin ?? null,
             price: data.price,

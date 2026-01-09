@@ -97,8 +97,10 @@ router.post(
 
             const {
                 type,
-                origin,
-                destination,
+                originLat,
+                originLng,
+                destLat,
+                destLng,
                 distanceKm,
                 durationMin,
                 price,
@@ -106,8 +108,10 @@ router.post(
                 packageWeight,
             }: {
                 type: RideType;
-                origin: string;
-                destination: string;
+                originLat: number;
+                originLng: number;
+                destLat: number;
+                destLng: number;
                 distanceKm?: number;
                 durationMin?: number;
                 price: number;
@@ -115,10 +119,23 @@ router.post(
                 packageWeight?: number;
             } = req.body;
 
-            // Validation
-            if (!type || !origin || !destination || price === undefined) {
+            // Validation - required fields
+            if (!type || originLat === undefined || originLng === undefined ||
+                destLat === undefined || destLng === undefined || price === undefined) {
                 return res.status(400).json({
-                    error: "Missing required fields: type, origin, destination, price",
+                    error: "Missing required fields: type, originLat, originLng, destLat, destLng, price",
+                });
+            }
+
+            // Validate coordinate ranges
+            if (originLat < -90 || originLat > 90 || destLat < -90 || destLat > 90) {
+                return res.status(400).json({
+                    error: "Latitude must be between -90 and 90",
+                });
+            }
+            if (originLng < -180 || originLng > 180 || destLng < -180 || destLng > 180) {
+                return res.status(400).json({
+                    error: "Longitude must be between -180 and 180",
                 });
             }
 
@@ -138,8 +155,10 @@ router.post(
             const ride = await createRide({
                 userId,
                 type,
-                origin,
-                destination,
+                originLat,
+                originLng,
+                destLat,
+                destLng,
                 price,
                 ...(distanceKm !== undefined && { distanceKm }),
                 ...(durationMin !== undefined && { durationMin }),
