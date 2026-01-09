@@ -130,16 +130,16 @@ router.post(
                 destLng: number;
                 distanceKm?: number;
                 durationMin?: number;
-                price: number;
+                price?: number;
                 seatCount?: number;
                 packageWeight?: number;
             } = req.body;
 
-            // Validation - required fields
+            // Validation - required fields (price is now optional, calculated in backend)
             if (!type || originLat === undefined || originLng === undefined ||
-                destLat === undefined || destLng === undefined || price === undefined) {
+                destLat === undefined || destLng === undefined) {
                 return res.status(400).json({
-                    error: "Missing required fields: type, originLat, originLng, destLat, destLng, price",
+                    error: "Missing required fields: type, originLat, originLng, destLat, destLng",
                 });
             }
 
@@ -175,7 +175,7 @@ router.post(
                 originLng,
                 destLat,
                 destLng,
-                price,
+                ...(price !== undefined && { price }),
                 ...(distanceKm !== undefined && { distanceKm }),
                 ...(durationMin !== undefined && { durationMin }),
                 ...(seatCount !== undefined && { seatCount }),

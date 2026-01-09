@@ -1,10 +1,12 @@
 import { RideStatus, RideType } from "@prisma/client";
 import { db } from "../../utils/db";
 import { processDriverCommission, processDriverCancellationPenalty } from "./ride.payment.services";
+import { estimateRidePrice } from "./ride.pricing.services";
 
 /**
  * Create a new ride for a passenger
  * Note: Passengers pay with cash directly to driver - no wallet check needed
+ * Price is automatically calculated if not provided
  */
 export async function createRide(data: {
     userId: string;
@@ -15,10 +17,23 @@ export async function createRide(data: {
     destLng: number;
     distanceKm?: number;
     durationMin?: number;
-    price: number;
+    price?: number;
     seatCount?: number;
     packageWeight?: number;
 }) {
+    // Calculate price if not provided
+    const finalPrice = data.price ?? estimateRidePrice({
+        type: data.type,
+        ...(data.distanceKm !== undefined && { distanceKm: data.distanceKm }),
+        ...(data.durationMin !== undefined && { durationMin: data.durationMin }),
+        ...(data.seatCount !== undefined && { seatCount: data.seatCount }),
+        ...(data.packageWeight !== undefined && { packageWeight: data.packageWeight }),
+        originLat: data.originLat,
+        originLng: data.originLng,
+        destLat: data.destLat,
+        destLng: data.destLng,
+    });
+
     return db.ride.create({
         data: {
             userId: data.userId,
@@ -29,7 +44,7 @@ export async function createRide(data: {
             destLng: data.destLng,
             distanceKm: data.distanceKm ?? null,
             durationMin: data.durationMin ?? null,
-            price: data.price,
+            price: finalPrice,
             seatCount: data.seatCount ?? null,
             packageWeight: data.packageWeight ?? null,
             status: RideStatus.PENDING,
