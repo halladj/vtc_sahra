@@ -44,7 +44,7 @@ app.use((err: any, req: any, res: any, next: any) => {
     res.status(err.status || 500).json({ error: err.message });
 });
 
-describe("Ride Routes - Cash Only Model", () => {
+describe("Ride Routes - Coordinate Based Locations", () => {
     const passengerPayload = { userId: "passenger-123", role: Role.USER };
     const driverPayload = { userId: "driver-123", role: Role.DRIVER };
 
@@ -58,15 +58,17 @@ describe("Ride Routes - Cash Only Model", () => {
         jest.clearAllMocks();
     });
 
-    describe("POST /rides - Create Ride (Cash Payment)", () => {
+    describe("POST /rides - Create Ride with Coordinates", () => {
         const validRideData = {
             type: RideType.REGULAR,
-            origin: "123 Main St",
-            destination: "456 Park Ave",
+            originLat: 36.7538,
+            originLng: 3.0588,
+            destLat: 36.7650,
+            destLng: 3.0700,
             price: 500,
         };
 
-        it("should create ride without wallet balance check", async () => {
+        it("should create ride with valid coordinates", async () => {
             const mockRide = {
                 id: "ride-123",
                 ...validRideData,
@@ -85,6 +87,69 @@ describe("Ride Routes - Cash Only Model", () => {
 
             expect(res.status).toBe(201);
             expect(res.body.id).toBe("ride-123");
+            expect(res.body.originLat).toBe(36.7538);
+            expect(res.body.destLng).toBe(3.0700);
+        });
+
+        it("should reject invalid latitude (out of range)", async () => {
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .post("/rides")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ ...validRideData, originLat: 95 }); // Invalid: > 90
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toContain("Latitude must be between");
+        });
+
+        it("should reject invalid longitude (out of range)", async () => {
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .post("/rides")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ ...validRideData, destLng: 200 }); // Invalid: > 180
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toContain("Longitude must be between");
+        });
+
+        it("should reject missing coordinates", async () => {
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .post("/rides")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ type: RideType.REGULAR, price: 500 });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toContain("Missing required fields");
+        });
+
+        it("should accept edge case coordinates", async () => {
+            const edgeCaseData = {
+                type: RideType.REGULAR,
+                originLat: -90, // Min valid
+                originLng: -180, // Min valid
+                destLat: 90,   // Max valid
+                destLng: 180,  // Max valid
+                price: 500,
+            };
+
+            const mockRide = {
+                id: "ride-edge",
+                ...edgeCaseData,
+                userId: passengerPayload.userId,
+                status: RideStatus.PENDING,
+            };
+
+            (db.ride.create as jest.Mock).mockResolvedValue(mockRide);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .post("/rides")
+                .set("Authorization", `Bearer ${token}`)
+                .send(edgeCaseData);
+
+            expect(res.status).toBe(201);
         });
     });
 

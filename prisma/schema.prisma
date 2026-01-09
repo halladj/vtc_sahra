@@ -226,8 +226,10 @@ model Ride {
   driverId      String?  // who accepted the ride
   vehicleId     String?  // optional if driver has multiple vehicles
 
-  origin        String
-  destination   String
+  originLat     Float    // origin latitude
+  originLng     Float    // origin longitude
+  destLat       Float    // destination latitude
+  destLng       Float    // destination longitude
   distanceKm    Float?   // computed when booking
   durationMin   Float?   // estimated duration
   price         Int      // final price in credits
