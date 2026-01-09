@@ -45,6 +45,10 @@ export function estimateRidePrice(params: {
     packageWeight?: number;
     origin?: string;
     destination?: string;
+    originLat?: number;
+    originLng?: number;
+    destLat?: number;
+    destLng?: number;
 }): number {
     // For now, return a flat rate
     // In the future, this will contain complex logic based on the parameters
@@ -89,6 +93,10 @@ export function getRidePriceBreakdown(params: {
     packageWeight?: number;
     origin?: string;
     destination?: string;
+    originLat?: number;
+    originLng?: number;
+    destLat?: number;
+    destLng?: number;
 }) {
     const totalPrice = estimateRidePrice(params);
 

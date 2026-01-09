@@ -65,8 +65,10 @@ export async function createRating(
             ride: {
                 select: {
                     id: true,
-                    origin: true,
-                    destination: true,
+                    originLat: true,
+                    originLng: true,
+                    destLat: true,
+                    destLng: true,
                     createdAt: true,
                 },
             },
@@ -123,8 +125,10 @@ export async function getDriverRatings(driverId: string) {
             ride: {
                 select: {
                     id: true,
-                    origin: true,
-                    destination: true,
+                    originLat: true,
+                    originLng: true,
+                    destLat: true,
+                    destLng: true,
                     createdAt: true,
                 },
             },
