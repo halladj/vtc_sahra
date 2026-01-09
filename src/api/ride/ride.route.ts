@@ -36,6 +36,10 @@ router.post(
                 packageWeight,
                 origin,
                 destination,
+                originLat,
+                originLng,
+                destLat,
+                destLng,
             }: {
                 type: RideType;
                 distanceKm?: number;
@@ -44,6 +48,10 @@ router.post(
                 packageWeight?: number;
                 origin?: string;
                 destination?: string;
+                originLat?: number;
+                originLng?: number;
+                destLat?: number;
+                destLng?: number;
             } = req.body;
 
             // Validation
@@ -62,6 +70,10 @@ router.post(
                 ...(packageWeight !== undefined && { packageWeight }),
                 ...(origin !== undefined && { origin }),
                 ...(destination !== undefined && { destination }),
+                ...(originLat !== undefined && { originLat }),
+                ...(originLng !== undefined && { originLng }),
+                ...(destLat !== undefined && { destLat }),
+                ...(destLng !== undefined && { destLng }),
             });
 
             // Get detailed breakdown
@@ -73,6 +85,10 @@ router.post(
                 ...(packageWeight !== undefined && { packageWeight }),
                 ...(origin !== undefined && { origin }),
                 ...(destination !== undefined && { destination }),
+                ...(originLat !== undefined && { originLat }),
+                ...(originLng !== undefined && { originLng }),
+                ...(destLat !== undefined && { destLat }),
+                ...(destLng !== undefined && { destLng }),
             });
 
             res.json({
@@ -378,8 +394,10 @@ router.put(
             }
 
             const {
-                origin,
-                destination,
+                originLat,
+                originLng,
+                destLat,
+                destLng,
                 distanceKm,
                 durationMin,
                 price,
@@ -388,8 +406,10 @@ router.put(
             } = req.body;
 
             const ride = await updateRide(rideId, userId, {
-                origin,
-                destination,
+                originLat,
+                originLng,
+                destLat,
+                destLng,
                 distanceKm,
                 durationMin,
                 price,

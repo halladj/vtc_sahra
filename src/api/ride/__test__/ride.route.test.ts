@@ -242,4 +242,51 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             expect(paymentServices.processDriverCancellationPenalty).not.toHaveBeenCalled();
         });
     });
+
+    describe("Ride Updates & Estimation", () => {
+        it("should estimate price with coordinates", async () => {
+            const res = await request(app)
+                .post("/rides/estimate")
+                .send({
+                    type: RideType.REGULAR,
+                    originLat: 36.7538,
+                    originLng: 3.0588,
+                    destLat: 36.7650,
+                    destLng: 3.0700,
+                });
+
+            expect(res.status).toBe(200);
+            expect(res.body.estimatedPrice).toBeDefined();
+            expect(res.body.breakdown).toBeDefined();
+        });
+
+        it("should update ride details with coordinates", async () => {
+            const mockRide = {
+                id: "ride-pending-1",
+                userId: passengerPayload.userId,
+                status: RideStatus.PENDING,
+                originLat: 36.7,
+                originLng: 3.0,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                originLat: 36.8,
+                originLng: 3.1,
+            });
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .put("/rides/ride-pending-1")
+                .set("Authorization", `Bearer ${token}`)
+                .send({
+                    originLat: 36.8,
+                    originLng: 3.1,
+                });
+
+            expect(res.status).toBe(200);
+            expect(res.body.originLat).toBe(36.8);
+        });
+    });
 });

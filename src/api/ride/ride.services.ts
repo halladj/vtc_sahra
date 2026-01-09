@@ -363,8 +363,10 @@ export async function updateRide(
     rideId: string,
     userId: string,
     data: Partial<{
-        origin: string;
-        destination: string;
+        originLat: number;
+        originLng: number;
+        destLat: number;
+        destLng: number;
         distanceKm: number;
         durationMin: number;
         price: number;
