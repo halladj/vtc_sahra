@@ -65,7 +65,6 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             originLng: 3.0588,
             destLat: 36.7650,
             destLng: 3.0700,
-            price: 500,
         };
 
         it("should create ride with valid coordinates", async () => {
@@ -118,7 +117,7 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             const res = await request(app)
                 .post("/rides")
                 .set("Authorization", `Bearer ${token}`)
-                .send({ type: RideType.REGULAR, price: 500 });
+                .send({ type: RideType.REGULAR });
 
             expect(res.status).toBe(400);
             expect(res.body.error).toContain("Missing required fields");
@@ -131,7 +130,6 @@ describe("Ride Routes - Coordinate Based Locations", () => {
                 originLng: -180, // Min valid
                 destLat: 90,   // Max valid
                 destLng: 180,  // Max valid
-                price: 500,
             };
 
             const mockRide = {
