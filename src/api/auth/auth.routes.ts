@@ -7,7 +7,7 @@ import { Role, Vehicle, VehicleType } from "@prisma/client";
 // import { upload } from '../../middlewares/middlewares';
 import { createDriverByEmailAndPassword } from '../driver/driver.services';
 import crypto from "crypto";
-import { createUploader } from '../../middlewares/middlewares';
+import { createUploader, isAuthenticated, requireRole } from '../../middlewares/middlewares';
 
 //dev only remove on prod
 import objectPath from "object-path";
@@ -324,5 +324,77 @@ router.post("/reset-password", async (req, res, next) => {
     next(err)
   }
 });
+
+/**
+ * Register a new admin user (Admin only)
+ * Only existing admins can create new admin accounts
+ */
+router.post('/register-admin',
+  isAuthenticated as any,
+  requireRole(Role.ADMIN) as any,
+  userPhotoUpload.single('photo'),
+  async (req: any, res, next) => {
+    try {
+      const {
+        email,
+        password,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
+        address,
+        wilaya,
+        commune
+      } = req.body;
+
+      if (!email || !password) {
+        res.status(400);
+        throw new Error('You must provide an email and a password.');
+      }
+
+      const existingUser = await findUserByEmail(email);
+      if (existingUser) {
+        res.status(400);
+        throw new Error('Email already in use.');
+      }
+
+      const photoUrl = req.file ? `uploads/users/${req.file.filename}` : null;
+
+      const admin = await createUserByEmailAndPassword({
+        email,
+        password,
+        role: Role.ADMIN,
+        photo: photoUrl ? photoUrl : "",
+        address,
+        phoneNumber,
+        firstName,
+        lastName,
+        sex,
+        dateOfBirth,
+        wilaya,
+        commune
+      });
+
+      const { accessToken, refreshToken } = generateTokens(admin);
+      await addRefreshTokenToWhitelist({ refreshToken, userId: admin.id });
+
+      res.status(201).json({
+        message: 'Admin account created successfully',
+        admin: {
+          id: admin.id,
+          email: admin.email,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          role: admin.role,
+        },
+        accessToken,
+        refreshToken,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 export = router;
