@@ -9,6 +9,9 @@
   - Added the required column `originLng` to the `Ride` table without a default value. This is not possible if the table is not empty.
 
 */
+-- Clean up incompatible data
+DELETE FROM "Ride";
+
 -- AlterTable
 ALTER TABLE "Ride" DROP COLUMN "destination",
 DROP COLUMN "origin",
