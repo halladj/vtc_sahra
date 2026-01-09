@@ -3,49 +3,35 @@ import { creditWallet, debitWallet, getWalletBalance } from "../wallet/wallet.se
 
 /**
  * Configuration for ride payments
+ * Note: Cash-only model - driver pays commission/penalty to platform
  */
 const PAYMENT_CONFIG = {
-    COMMISSION_PERCENT: 0.15, // 15% platform commission
-    CANCELLATION_PENALTY_PERCENT: 0.10, // 10% penalty for driver cancellation
+    COMMISSION_PERCENT: 0.10, // 10% platform commission from driver on completion
+    CANCELLATION_PENALTY_PERCENT: 0.05, // 5% penalty when driver cancels
 };
 
 /**
- * Process payment for a completed ride
- * Debits passenger and credits driver (minus commission)
+ * Process driver commission for a completed ride (cash payment model)
+ * Driver pays 2% commission to the platform
  */
-export async function processRidePayment(
+export async function processDriverCommission(
     rideId: string,
-    passengerId: string,
     driverId: string,
     ridePrice: number
 ) {
-    // Validate passenger has sufficient balance
-    const passengerBalance = await getWalletBalance(passengerId);
-    if (passengerBalance < ridePrice) {
-        throw new Error("Insufficient balance to complete ride");
-    }
-
-    // Calculate amounts
+    // Calculate commission (2% of ride price)
     const commissionAmount = Math.floor(ridePrice * PAYMENT_CONFIG.COMMISSION_PERCENT);
-    const driverPayment = ridePrice - commissionAmount;
 
-    // Process payments in a transaction
+    // Process commission in a transaction
     const result = await db.$transaction(async (tx) => {
-        // 1. Debit passenger
-        const passengerDebit = await debitWallet(
-            passengerId,
-            ridePrice,
-            `Ride payment: ${rideId}`
-        );
-
-        // 2. Credit driver
-        const driverCredit = await creditWallet(
+        // 1. Debit driver's wallet for commission
+        const driverDebit = await debitWallet(
             driverId,
-            driverPayment,
-            `Ride earnings: ${rideId}`
+            commissionAmount,
+            `Platform commission: ${rideId}`
         );
 
-        // 3. Create commission record
+        // 2. Create commission record
         const commission = await tx.commission.create({
             data: {
                 rideId,
@@ -55,11 +41,10 @@ export async function processRidePayment(
         });
 
         return {
-            passengerTransaction: passengerDebit.transaction,
-            driverTransaction: driverCredit.transaction,
+            driverTransaction: driverDebit.transaction,
             commission,
-            passengerBalance: passengerDebit.wallet.balance,
-            driverBalance: driverCredit.wallet.balance,
+            driverBalance: driverDebit.wallet.balance,
+            commissionAmount,
         };
     });
 
@@ -68,13 +53,14 @@ export async function processRidePayment(
 
 /**
  * Process cancellation penalty for driver-initiated cancellations
- * Debits penalty from driver's wallet
+ * Driver pays 5% penalty when they cancel
  */
 export async function processDriverCancellationPenalty(
     rideId: string,
     driverId: string,
     ridePrice: number
 ) {
+    // Use cancellation penalty rate (5%)
     const penaltyAmount = Math.floor(ridePrice * PAYMENT_CONFIG.CANCELLATION_PENALTY_PERCENT);
 
     try {
@@ -125,25 +111,28 @@ export async function processDriverCancellationPenalty(
 }
 
 /**
- * Check if passenger has sufficient balance for a ride
+ * Check if driver has sufficient balance for commission
  */
-export async function validatePassengerBalance(
-    passengerId: string,
+export async function validateDriverBalance(
+    driverId: string,
     ridePrice: number
-): Promise<{ valid: boolean; balance: number; message?: string }> {
-    const balance = await getWalletBalance(passengerId);
+): Promise<{ valid: boolean; balance: number; commissionRequired: number; message?: string }> {
+    const balance = await getWalletBalance(driverId);
+    const commissionRequired = Math.floor(ridePrice * PAYMENT_CONFIG.COMMISSION_PERCENT);
 
-    if (balance < ridePrice) {
+    if (balance < commissionRequired) {
         return {
             valid: false,
             balance,
-            message: `Insufficient balance. Required: ${ridePrice}, Available: ${balance}`,
+            commissionRequired,
+            message: `Insufficient balance for commission. Required: ${commissionRequired}, Available: ${balance}`,
         };
     }
 
     return {
         valid: true,
         balance,
+        commissionRequired,
     };
 }
 

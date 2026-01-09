@@ -149,13 +149,6 @@ router.post(
 
             res.status(201).json(ride);
         } catch (error: any) {
-            // Handle insufficient balance error
-            if (error.message === "Insufficient balance to create ride") {
-                return res.status(402).json({
-                    error: error.message,
-                    code: "INSUFFICIENT_BALANCE"
-                });
-            }
             next(error);
         }
     }

@@ -1,0 +1,1769 @@
+{
+	"info": {
+		"_postman_id": "65ff65bc-34a0-4006-a1e6-45796e82386c",
+		"name": "vtc-sahra",
+		"description": "# 🚀 Get started here\n\nThis template guides you through CRUD operations (GET, POST, PUT, DELETE), variables, and tests.\n\n## 🔖 **How to use this template**\n\n#### **Step 1: Send requests**\n\nRESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.\n\nThis collection contains each of these [request](https://learning.postman.com/docs/sending-requests/requests/) types. Open each request and click \"Send\" to see what happens.\n\n#### **Step 2: View responses**\n\nObserve the response tab for status code (200 OK), response time, and size.\n\n#### **Step 3: Send new Body data**\n\nUpdate or add new data in \"Body\" in the POST request. Typically, Body data is also used in PUT request.\n\n```\n{\n    \"name\": \"Add your name in the body\"\n}\n\n ```\n\n#### **Step 4: Update the variable**\n\nVariables enable you to store and reuse values in Postman. We have created a [variable](https://learning.postman.com/docs/sending-requests/variables/) called `base_url` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.\n\n#### **Step 5: Add tests in the \"Scripts\" tab**\n\nAdding tests to your requests can help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the \"Test Results\" tab.\n\n<img src=\"https://content.pstmn.io/fa30ea0a-373d-4545-a668-e7b283cca343/aW1hZ2UucG5n\" alt=\"\" height=\"1530\" width=\"2162\">\n\n## 💪 Pro tips\n\n- Use folders to group related requests and organize the collection.\n    \n- Add more [scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/) to verify if the API works as expected and execute workflows.\n    \n\n## 💡Related templates\n\n[API testing basics](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9a37a28-055b-49cd-8c7e-97494a21eb54&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[API documentation](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9c28f47-1253-44af-a2f3-20dce4da1f18&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[Authorization methods](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=31a9a6ed-4cdf-4ced-984c-d12c9aec1c27&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48083076",
+		"_collection_link": "https://halladj-gamer-6806132.postman.co/workspace/HALLADJ-00's-Workspace~c6702220-dda7-4442-887f-81fb22b244c4/collection/48083076-65ff65bc-34a0-4006-a1e6-45796e82386c?action=share&source=collection_link&creator=48083076"
+	},
+	"item": [
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get My Wallet",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/wallet",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						},
+						"description": "Get authenticated user's wallet with balance and transaction history"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transaction History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/wallet/transactions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet",
+								"transactions"
+							]
+						},
+						"description": "Get all transactions for authenticated user's wallet"
+					},
+					"response": []
+				},
+				{
+					"name": "Credit Wallet (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user-id-here\",\n  \"amount\": 50000,\n  \"reference\": \"Admin top-up\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/wallet/credit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet",
+								"credit"
+							]
+						},
+						"description": "Credit a user's wallet (Admin only). Amount in cents (50000 = 500 DA)"
+					},
+					"response": []
+				},
+				{
+					"name": "Debit Wallet (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user-id-here\",\n  \"amount\": 10000,\n  \"reference\": \"Admin deduction\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/wallet/debit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet",
+								"debit"
+							]
+						},
+						"description": "Debit a user's wallet (Admin only). Amount in cents (10000 = 100 DA)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/home/hambz/pp.jpg"
+								},
+								{
+									"key": "email",
+									"value": "hamza@dz.dz",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "hamza1591",
+									"type": "text"
+								},
+								{
+									"key": "phoneNumber",
+									"value": "+21355882522",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "firstName",
+									"value": "Hamza",
+									"type": "text"
+								},
+								{
+									"key": "lastName",
+									"value": "Halladj",
+									"type": "text"
+								},
+								{
+									"key": "sex",
+									"value": "MALE",
+									"type": "text"
+								},
+								{
+									"key": "dateOfBirth",
+									"value": "1997-05-15T00:00:00.000Z",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "Rue Didouche Mourad 45",
+									"type": "text"
+								},
+								{
+									"key": "wilaya",
+									"value": "Algiers",
+									"type": "text"
+								},
+								{
+									"key": "commune",
+									"value": "Bab El Oued",
+									"type": "text"
+								},
+								{
+									"key": "phoneNumber",
+									"value": "0559934219",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"Luciano@Messi.dz\",\n    \"password\": \"Hamza123!!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "profile info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkOTgyYjRiYi0xZDQ5LTQ2ZDUtYWVlYy01ZGI0ZTZlZjhhODciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NzQzNzA4NywiZXhwIjoxNzY3NDQ0Mjg3fQ.BsGH_BVHWXT_ZKn2Qhr87ykrO3nMcEuuNv68XpRGuTY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						},
+						"description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+					},
+					"response": []
+				},
+				{
+					"name": "refreshToken",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"LumshAfmPebIM-CvhE_27g\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refreshToken",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refreshToken"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "revokeRefreshTokens",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\":\"b1eba887-4124-4191-bbfa-ca681dcdee19\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/revokeRefreshTokens",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"revokeRefreshTokens"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "forgot-password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"hamza@hamza.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset-password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newPassword\":\"hamza3mksuiii\",\n    \"token\":\"5e0a87383f6bd2972342cd1f76ea6caacacf2b6c71521bd1f3bd9722160bfa04\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update-photo",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZTdiNDI3Yy0wYjY2LTQ2OGUtOTVmNy02NmI4NzA4OWJmM2YiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY2MzQyMTg0LCJleHAiOjE3NjYzNDkzODR9.MsujaeVZEuXShLFY1bHiqQUIHAgrl0-agMwBlaCT7gk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/home/hambz/Pictures/Screenshots/Screenshot from 2025-12-16 10-55-56.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/photo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"photo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update-user",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkMTVjYTQ4Ni1lYzMwLTQ2Y2QtYTg4My01YjNlN2VkNmQwY2IiLCJpYXQiOjE3NTY4NTk5MjQsImV4cCI6MTc1Njg2MDIyNH0.rl1wti-8qwnaw7650Tp25vt0_63WgFdzYpP0zzJQ87U",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": \"Alger\",\n    \"phoneNumber\": \"0558832543\",\n    \"sex\": \"FEMALE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "driver",
+			"item": [
+				{
+					"name": "register-driver",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/home/hambz/Pictures/kk.png"
+								},
+								{
+									"key": "email",
+									"value": "Luciano@Messi.dz",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Hamza123!!!",
+									"type": "text"
+								},
+								{
+									"key": "firstName",
+									"value": "Leo",
+									"description": "l",
+									"type": "text"
+								},
+								{
+									"key": "lastName",
+									"value": "Messi",
+									"type": "text"
+								},
+								{
+									"key": "sex",
+									"value": "MALE",
+									"type": "text"
+								},
+								{
+									"key": "dateOfBirth",
+									"value": "1997-05-15T00:00:00.000Z",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "Rue Didouche Mourad 45",
+									"type": "text"
+								},
+								{
+									"key": "wilaya",
+									"value": "Algiers",
+									"type": "text"
+								},
+								{
+									"key": "commune",
+									"value": "Bab El Oued",
+									"type": "text"
+								},
+								{
+									"key": "phoneNumber",
+									"value": "0559934221",
+									"type": "text"
+								},
+								{
+									"key": "vehicle.type",
+									"value": "CAR",
+									"type": "text"
+								},
+								{
+									"key": "vehicle.model",
+									"value": "Toyota Yaris",
+									"type": "text"
+								},
+								{
+									"key": "vehicle.year",
+									"value": "2025",
+									"type": "text"
+								},
+								{
+									"key": "vehicle.plate",
+									"value": "192076611",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register-driver",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register-driver"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "register-driver Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"sdf\",\n  \"lastName\": \"sdfsdf\",\n  \"email\": \"tt1@gmail.com\",\n  \"phoneNumber\": \"0567584832\",\n  \"password\": \"123456\",\n  \"dateOfBirth\": \"2000-01-11T23:00:00.000Z\",\n  \"sex\": \"MALE\",\n  \"address\": \"qqq\",\n  \"wilaya\": \"Tlemcen\",\n  \"commune\": \"Amieur\",\n  \"vehicle\": {\n    \"type\": \"CAR\",\n    \"model\": \"toyota\",\n    \"year\": 2021,\n    \"plate\": \"123321\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register-driver",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register-driver"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "driver-profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add-verhicle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{   \"user\":{\n        \"role\":\"DRIVER\"\n    },\n    \"vehicle\": {\n        \"type\":\"CAR\",\n        \"model\":\"lambo\",\n        \"year\": 2002,\n        \"plate\": \"192012121\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/vehicles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"vehicles"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vehicle",
+			"item": [
+				{
+					"name": "add-verhicle",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vehicle\": {\n        \"type\":\"CAR\",\n        \"model\":\"lambo\",\n        \"year\": 2002,\n        \"plate\": \"192012121\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/vehicles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"vehicles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-vehicles",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vehicle\": {\n        \"type\":\"CAR\",\n        \"model\":\"lambo\",\n        \"year\": 2002,\n        \"plate\": \"192012121\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/vehicles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"vehicles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update-verhicle Copy",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \n        \"type\":\"CAR\",\n        \"model\":\"Nissan\",\n        \"year\": 2002,\n        \"plate\": \"192012121\"\n  \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/vehicles/c5c85ef2-7b23-4214-b50a-8ece70acbd5a",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"vehicles",
+								"c5c85ef2-7b23-4214-b50a-8ece70acbd5a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete-verhicle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZTdiNDI3Yy0wYjY2LTQ2OGUtOTVmNy02NmI4NzA4OWJmM2YiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY2MzE0NTM5LCJleHAiOjE3NjYzMjE3Mzl9.0AOIKsUHABxxjX1WBNPG3BoMleqSuz0_OqqjORMEZ9I",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@vtc.dz\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+213555000099\",\n  \"address\": \"123 Main Street\",\n  \"wilaya\": \"Algiers\",\n  \"commune\": \"Hydra\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register-driver",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register-driver"
+							]
+						},
+						"description": "Register a new user. Automatically creates a wallet with 0 balance."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Driver",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newdriver@vtc.dz\",\n  \"password\": \"password123\",\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Driver\",\n  \"phoneNumber\": \"+213555000088\",\n  \"address\": \"456 Driver Ave\",\n  \"wilaya\": \"Oran\",\n  \"commune\": \"Es Senia\",\n  \"vehicleType\": \"CAR\",\n  \"vehicleModel\": \"Renault Symbol\",\n  \"vehicleYear\": 2021,\n  \"vehiclePlate\": \"16-1234-16\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register-driver",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register-driver"
+							]
+						},
+						"description": "Register a new driver with vehicle. Automatically creates a wallet."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Passenger)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.collectionVariables.set('passengerToken', response.accessToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user1@vtc.dz\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as passenger. Token saved to passengerToken variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Driver)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.collectionVariables.set('driverToken', response.accessToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"driver1@vtc.dz\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as driver. Token saved to driverToken variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.collectionVariables.set('adminToken', response.accessToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@vtc.dz\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as admin. Token saved to adminToken variable."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gift Cards",
+			"item": [
+				{
+					"name": "Create Gift Card (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 100000,\n  \"code\": \"GIFT-CUSTOM-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/giftcards",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"giftcards"
+							]
+						},
+						"description": "Create a gift card (Admin only). Code is optional - auto-generated if not provided. Amount in cents."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Gift Cards (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/giftcards",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"giftcards"
+							]
+						},
+						"description": "Get all gift cards (Admin only). Shows unused cards first."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Gift Card by Code (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/giftcards/GIFT-1000-ABC123",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"giftcards",
+								"GIFT-1000-ABC123"
+							]
+						},
+						"description": "Get specific gift card details (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Redeem Gift Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"GIFT-1000-ABC123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/giftcards/redeem",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"giftcards",
+								"redeem"
+							]
+						},
+						"description": "Redeem a gift card. Credits the authenticated user's wallet."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rides",
+			"item": [
+				{
+					"name": "Create Ride",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('rideId', response.id);",
+									"    pm.test('Ride created successfully', function() {",
+									"        pm.expect(response.status).to.equal('PENDING');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"REGULAR\",\n  \"origin\": \"123 Main Street, Algiers\",\n  \"destination\": \"456 Park Avenue, Oran\",\n  \"distanceKm\": 10.5,\n  \"durationMin\": 25,\n  \"price\": 50000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides"
+							]
+						},
+						"description": "Create a new ride request. Price in cents (50000 = 500 DA). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Rides (Driver)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/pending",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"pending"
+							]
+						},
+						"description": "Get all pending rides available for drivers to accept. Requires DRIVER role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Rides (Passenger)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/user?status=PENDING",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"user"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING",
+									"description": "Optional: PENDING, ACCEPTED, ONGOING, COMPLETED, CANCELLED"
+								}
+							]
+						},
+						"description": "Get all rides for authenticated user (as passenger)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Rides (Driver)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/driver",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"driver"
+							]
+						},
+						"description": "Get all rides for the authenticated driver. Requires DRIVER role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ride Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}"
+							]
+						},
+						"description": "Get details of a specific ride. Only accessible by passenger or driver of the ride."
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Ride (Driver)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.test('Ride accepted successfully', function() {",
+									"        pm.expect(response.status).to.equal('ACCEPTED');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMzMyYzAxZi1mOTRlLTQxNTYtOWQ3Mi1jMmY3MmViOWM5ZTQiLCJyb2xlIjoiRFJJVkVSIiwiaWF0IjoxNzY3NDM3MDQ1LCJleHAiOjE3Njc0NDQyNDV9.K7NXFTQWUgreJ_Q379bJarV5LL1TUvvD7DRAvnTnveE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehicleId\": \"5ffa8ae7-94ea-4d62-96cc-58763d623a4b\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}/accept",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}",
+								"accept"
+							]
+						},
+						"description": "Accept a pending ride. Requires DRIVER role and valid vehicleId."
+					},
+					"response": []
+				},
+				{
+					"name": "Start Ride (ONGOING)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ONGOING\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}",
+								"status"
+							]
+						},
+						"description": "Start an accepted ride by updating status to ONGOING."
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Ride (Process Payment)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}",
+								"status"
+							]
+						},
+						"description": "Complete ride. Cash payment model - driver pays 10% commission to platform."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Ride (Passenger)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}",
+								"cancel"
+							]
+						},
+						"description": "Cancel a ride as passenger. No penalty. Cannot cancel completed rides."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Ride (Driver - with Penalty)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{driverToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/{{rideId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"{{rideId}}",
+								"cancel"
+							]
+						},
+						"description": "Cancel a ride as driver. Driver pays 5% penalty if ride is ACCEPTED or ONGOING."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratings",
+			"item": [
+				{
+					"name": "Create Rating",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rideId\": \"{{rideId}}\",\n  \"score\": 5,\n  \"comment\": \"Excellent driver! Very professional and safe.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratings"
+							]
+						},
+						"description": "Rate a completed ride. Only the passenger can rate. Score must be 1-5 stars."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rating for Ride",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ratings/ride/{{rideId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratings",
+								"ride",
+								"{{rideId}}"
+							]
+						},
+						"description": "Get rating for a specific ride. Only accessible by passenger or driver of the ride."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Driver Ratings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ratings/driver/driver-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratings",
+								"driver",
+								"driver-id-here"
+							]
+						},
+						"description": "Get all ratings for a specific driver. Returns array of ratings with ride details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Driver Average Rating",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ratings/driver/driver-id-here/average",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratings",
+								"driver",
+								"driver-id-here",
+								"average"
+							]
+						},
+						"description": "Get driver's average rating and total count. Returns { average: 4.5, count: 10 }"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkOTgyYjRiYi0xZDQ5LTQ2ZDUtYWVlYy01ZGI0ZTZlZjhhODciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NzQzNzA4NywiZXhwIjoxNzY3NDQ0Mjg3fQ.BsGH_BVHWXT_ZKn2Qhr87ykrO3nMcEuuNv68XpRGuTY",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "id",
+			"value": "1"
+		},
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"disabled": true
+		},
+		{
+			"key": "base_url",
+			"value": "https://vtc-sahra.onrender.com",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "https://vtc-sahra.onrender.com",
+			"type": "string"
+		},
+		{
+			"key": "rideId",
+			"value": ""
+		}
+	]
+}
