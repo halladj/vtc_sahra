@@ -1,9 +1,9 @@
 import { db } from "../../../utils/db";
 import * as walletServices from "../../wallet/wallet.services";
 import {
-    processRidePayment,
+    processDriverCommission,
     processDriverCancellationPenalty,
-    validatePassengerBalance,
+    validateDriverBalance,
     getPaymentConfig,
 } from "../ride.payment.services";
 
@@ -20,38 +20,31 @@ jest.mock("../../../utils/db", () => ({
 // Mock wallet services
 jest.mock("../../wallet/wallet.services");
 
-describe("Ride Payment Services", () => {
+describe("Ride Payment Services - Cash Only Model", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    describe("processRidePayment", () => {
-        it("should process payment successfully with sufficient balance", async () => {
+    describe("processDriverCommission", () => {
+        it("should process 10% commission from driver on ride completion", async () => {
             const rideId = "ride-123";
-            const passengerId = "passenger-123";
             const driverId = "driver-123";
             const ridePrice = 100000; // 1000 DA
+            const expectedCommission = 10000; // 10% of 100000
 
-            const mockPassengerDebit = {
-                wallet: { balance: 50000 },
-                transaction: { id: "tx-1", amount: 100000 },
-            };
-
-            const mockDriverCredit = {
-                wallet: { balance: 85000 },
-                transaction: { id: "tx-2", amount: 85000 },
+            const mockDriverDebit = {
+                wallet: { balance: 90000 },
+                transaction: { id: "tx-1", amount: 10000 },
             };
 
             const mockCommission = {
                 id: "comm-1",
                 rideId,
-                percent: 0.15,
-                amount: 15000,
+                percent: 0.10,
+                amount: 10000,
             };
 
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(150000);
-            (walletServices.debitWallet as jest.Mock).mockResolvedValue(mockPassengerDebit);
-            (walletServices.creditWallet as jest.Mock).mockResolvedValue(mockDriverCredit);
+            (walletServices.debitWallet as jest.Mock).mockResolvedValue(mockDriverDebit);
 
             (db.$transaction as jest.Mock).mockImplementation(async (callback) => {
                 const tx = {
@@ -62,76 +55,62 @@ describe("Ride Payment Services", () => {
                 return callback(tx);
             });
 
-            const result = await processRidePayment(rideId, passengerId, driverId, ridePrice);
+            const result = await processDriverCommission(rideId, driverId, ridePrice);
 
-            expect(walletServices.getWalletBalance).toHaveBeenCalledWith(passengerId);
             expect(walletServices.debitWallet).toHaveBeenCalledWith(
-                passengerId,
-                100000,
-                `Ride payment: ${rideId}`
-            );
-            expect(walletServices.creditWallet).toHaveBeenCalledWith(
                 driverId,
-                85000, // 100000 - 15% commission
-                `Ride earnings: ${rideId}`
+                expectedCommission,
+                `Platform commission: ${rideId}`
             );
-            expect(result.passengerBalance).toBe(50000);
-            expect(result.driverBalance).toBe(85000);
-            expect(result.commission.amount).toBe(15000);
+            expect(result.driverBalance).toBe(90000);
+            expect(result.commissionAmount).toBe(10000);
         });
 
-        it("should throw error if passenger has insufficient balance", async () => {
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(50000);
+        it("should calculate 10% commission correctly for various ride prices", async () => {
+            const testCases = [
+                { ridePrice: 50000, expectedCommission: 5000 },    // 500 DA -> 50 DA
+                { ridePrice: 100000, expectedCommission: 10000 },  // 1000 DA -> 100 DA
+                { ridePrice: 250000, expectedCommission: 25000 },  // 2500 DA -> 250 DA
+            ];
 
-            await expect(
-                processRidePayment("ride-123", "passenger-123", "driver-123", 100000)
-            ).rejects.toThrow("Insufficient balance to complete ride");
-        });
+            for (const { ridePrice, expectedCommission } of testCases) {
+                jest.clearAllMocks();
 
-        it("should calculate commission correctly", async () => {
-            const ridePrice = 100000; // 1000 DA
-            const expectedCommission = 15000; // 15%
-            const expectedDriverPayment = 85000; // 85%
+                (walletServices.debitWallet as jest.Mock).mockResolvedValue({
+                    wallet: { balance: 100000 },
+                    transaction: { id: "tx-1" },
+                });
 
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(150000);
-            (walletServices.debitWallet as jest.Mock).mockResolvedValue({
-                wallet: { balance: 50000 },
-                transaction: { id: "tx-1" },
-            });
-            (walletServices.creditWallet as jest.Mock).mockResolvedValue({
-                wallet: { balance: 85000 },
-                transaction: { id: "tx-2" },
-            });
+                (db.$transaction as jest.Mock).mockImplementation(async (callback) => {
+                    const tx = {
+                        commission: {
+                            create: jest.fn().mockImplementation((data) => data.data),
+                        },
+                    };
+                    return callback(tx);
+                });
 
-            (db.$transaction as jest.Mock).mockImplementation(async (callback) => {
-                const tx = {
-                    commission: {
-                        create: jest.fn().mockImplementation((data) => data.data),
-                    },
-                };
-                return callback(tx);
-            });
+                await processDriverCommission("ride-123", "driver-123", ridePrice);
 
-            await processRidePayment("ride-123", "passenger-123", "driver-123", ridePrice);
-
-            expect(walletServices.creditWallet).toHaveBeenCalledWith(
-                "driver-123",
-                expectedDriverPayment,
-                expect.any(String)
-            );
+                expect(walletServices.debitWallet).toHaveBeenCalledWith(
+                    "driver-123",
+                    expectedCommission,
+                    expect.any(String)
+                );
+            }
         });
     });
 
     describe("processDriverCancellationPenalty", () => {
-        it("should deduct full penalty when driver has sufficient balance", async () => {
+        it("should charge driver 5% when driver cancels accepted ride", async () => {
             const rideId = "ride-123";
             const driverId = "driver-123";
             const ridePrice = 100000; // 1000 DA
-            const expectedPenalty = 10000; // 10%
+            const expectedPenalty = 5000; // 5% of 100000
 
             const mockDebit = {
-                wallet: { balance: 40000 },
-                transaction: { id: "tx-1", amount: 10000 },
+                wallet: { balance: 95000 },
+                transaction: { id: "tx-1", amount: 5000 },
             };
 
             (walletServices.debitWallet as jest.Mock).mockResolvedValue(mockDebit);
@@ -143,12 +122,36 @@ describe("Ride Payment Services", () => {
                 expectedPenalty,
                 `Cancellation penalty: ${rideId}`
             );
-            expect(result.penaltyCharged).toBe(10000);
-            expect(result.driverBalance).toBe(40000);
-            expect(result.partial).toBeUndefined();
+            expect(result.penaltyCharged).toBe(5000);
+            expect(result.driverBalance).toBe(95000);
         });
 
-        it("should deduct partial penalty when driver has insufficient balance", async () => {
+        it("should calculate 5% penalty correctly for various ride prices", async () => {
+            const testCases = [
+                { ridePrice: 50000, expectedPenalty: 2500 },    // 500 DA -> 25 DA
+                { ridePrice: 100000, expectedPenalty: 5000 },   // 1000 DA -> 50 DA
+                { ridePrice: 200000, expectedPenalty: 10000 },  // 2000 DA -> 100 DA
+            ];
+
+            for (const { ridePrice, expectedPenalty } of testCases) {
+                jest.clearAllMocks();
+
+                (walletServices.debitWallet as jest.Mock).mockResolvedValue({
+                    wallet: { balance: 100000 },
+                    transaction: { id: "tx-1" },
+                });
+
+                await processDriverCancellationPenalty("ride-123", "driver-123", ridePrice);
+
+                expect(walletServices.debitWallet).toHaveBeenCalledWith(
+                    "driver-123",
+                    expectedPenalty,
+                    expect.any(String)
+                );
+            }
+        });
+
+        it("should deduct partial amount when driver has insufficient balance", async () => {
             const rideId = "ride-123";
             const driverId = "driver-123";
             const ridePrice = 100000;
@@ -158,20 +161,20 @@ describe("Ride Payment Services", () => {
                 .mockRejectedValueOnce(new Error("Insufficient balance"))
                 .mockResolvedValueOnce({
                     wallet: { balance: 0 },
-                    transaction: { id: "tx-1", amount: 5000 },
+                    transaction: { id: "tx-1", amount: 3000 },
                 });
 
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(5000);
+            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(3000);
 
             const result = await processDriverCancellationPenalty(rideId, driverId, ridePrice);
 
             expect(walletServices.getWalletBalance).toHaveBeenCalledWith(driverId);
             expect(walletServices.debitWallet).toHaveBeenCalledWith(
                 driverId,
-                5000,
+                3000,
                 `Partial cancellation penalty: ${rideId}`
             );
-            expect(result.penaltyCharged).toBe(5000);
+            expect(result.penaltyCharged).toBe(3000);
             expect(result.driverBalance).toBe(0);
             expect(result.partial).toBe(true);
         });
@@ -193,67 +196,49 @@ describe("Ride Payment Services", () => {
             expect(result.partial).toBe(true);
             expect(result.transaction).toBeNull();
         });
-
-        it("should calculate penalty as 10% of ride price", async () => {
-            const ridePrice = 50000; // 500 DA
-            const expectedPenalty = 5000; // 50 DA (10%)
-
-            (walletServices.debitWallet as jest.Mock).mockResolvedValue({
-                wallet: { balance: 45000 },
-                transaction: { id: "tx-1" },
-            });
-
-            await processDriverCancellationPenalty("ride-123", "driver-123", ridePrice);
-
-            expect(walletServices.debitWallet).toHaveBeenCalledWith(
-                "driver-123",
-                expectedPenalty,
-                expect.any(String)
-            );
-        });
     });
 
-    describe("validatePassengerBalance", () => {
-        it("should return valid when passenger has sufficient balance", async () => {
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(150000);
+    describe("validateDriverBalance", () => {
+        it("should return valid when driver has sufficient balance for commission", async () => {
+            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(15000);
 
-            const result = await validatePassengerBalance("passenger-123", 100000);
+            const result = await validateDriverBalance("driver-123", 100000); // 10% = 10000
 
             expect(result.valid).toBe(true);
-            expect(result.balance).toBe(150000);
-            expect(result.message).toBeUndefined();
+            expect(result.balance).toBe(15000);
+            expect(result.commissionRequired).toBe(10000);
         });
 
-        it("should return invalid when passenger has insufficient balance", async () => {
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(50000);
+        it("should return invalid when driver has insufficient balance for commission", async () => {
+            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(5000);
 
-            const result = await validatePassengerBalance("passenger-123", 100000);
+            const result = await validateDriverBalance("driver-123", 100000); // 10% = 10000
 
             expect(result.valid).toBe(false);
-            expect(result.balance).toBe(50000);
-            expect(result.message).toContain("Insufficient balance");
-            expect(result.message).toContain("Required: 100000");
-            expect(result.message).toContain("Available: 50000");
+            expect(result.balance).toBe(5000);
+            expect(result.commissionRequired).toBe(10000);
+            expect(result.message).toContain("Insufficient balance for commission");
         });
 
-        it("should return valid when balance exactly matches price", async () => {
-            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(100000);
+        it("should return valid when balance exactly matches commission", async () => {
+            (walletServices.getWalletBalance as jest.Mock).mockResolvedValue(10000);
 
-            const result = await validatePassengerBalance("passenger-123", 100000);
+            const result = await validateDriverBalance("driver-123", 100000); // 10% = 10000
 
             expect(result.valid).toBe(true);
-            expect(result.balance).toBe(100000);
+            expect(result.balance).toBe(10000);
+            expect(result.commissionRequired).toBe(10000);
         });
     });
 
     describe("getPaymentConfig", () => {
-        it("should return payment configuration", () => {
+        it("should return payment configuration with 10% commission and 5% cancellation penalty", () => {
             const config = getPaymentConfig();
 
             expect(config).toHaveProperty("commissionPercent");
             expect(config).toHaveProperty("cancellationPenaltyPercent");
-            expect(config.commissionPercent).toBe(0.15);
-            expect(config.cancellationPenaltyPercent).toBe(0.10);
+            expect(config.commissionPercent).toBe(0.10);
+            expect(config.cancellationPenaltyPercent).toBe(0.05);
         });
     });
 });

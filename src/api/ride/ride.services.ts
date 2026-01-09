@@ -1,9 +1,10 @@
 import { RideStatus, RideType } from "@prisma/client";
 import { db } from "../../utils/db";
-import { processRidePayment, processDriverCancellationPenalty } from "./ride.payment.services";
+import { processDriverCommission, processDriverCancellationPenalty } from "./ride.payment.services";
 
 /**
  * Create a new ride for a passenger
+ * Note: Passengers pay with cash directly to driver - no wallet check needed
  */
 export async function createRide(data: {
     userId: string;
@@ -16,19 +17,6 @@ export async function createRide(data: {
     seatCount?: number;
     packageWeight?: number;
 }) {
-    // Check if user has sufficient balance before creating ride
-    const wallet = await db.wallet.findUnique({
-        where: { userId: data.userId },
-    });
-
-    if (!wallet) {
-        throw new Error("Wallet not found for user");
-    }
-
-    if (wallet.balance < data.price) {
-        throw new Error("Insufficient balance to create ride");
-    }
-
     return db.ride.create({
         data: {
             userId: data.userId,
@@ -295,11 +283,10 @@ export async function updateRideStatus(
         },
     });
 
-    // If ride is completed, process payment
+    // If ride is completed, charge driver 10% commission
     if (status === RideStatus.COMPLETED && ride.status === RideStatus.ONGOING && ride.driverId) {
-        await processRidePayment(
+        await processDriverCommission(
             rideId,
-            ride.userId,
             ride.driverId,
             ride.price
         );
