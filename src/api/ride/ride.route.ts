@@ -209,7 +209,7 @@ router.get(
 );
 
 /**
- * GET /rides/current - Get current rides for the authenticated user (PENDING or ACCEPTED only)
+ * GET /rides/current - Get current ride for the authenticated user (latest PENDING or ACCEPTED)
  */
 router.get(
     "/current",
@@ -218,8 +218,8 @@ router.get(
         try {
             const { userId } = req.payload!;
 
-            // Get only current rides (PENDING or ACCEPTED)
-            const rides = await db.ride.findMany({
+            // Get only the latest current ride (PENDING or ACCEPTED)
+            const ride = await db.ride.findFirst({
                 where: {
                     userId: userId,
                     status: {
@@ -243,7 +243,7 @@ router.get(
                 },
             });
 
-            res.json(rides);
+            res.json(ride); // Returns single ride or null
         } catch (error) {
             next(error);
         }

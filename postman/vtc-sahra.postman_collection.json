@@ -1474,7 +1474,7 @@
 								"current"
 							]
 						},
-						"description": "Get current (active) rides for the authenticated user. Returns only PENDING and ACCEPTED rides."
+						"description": "Get the latest current (active) ride for the authenticated user. Returns the most recent PENDING or ACCEPTED ride, or null if none."
 					},
 					"response": []
 				},
