@@ -282,11 +282,11 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             });
 
             const res = await request(app)
-                .patch(`/api/v1/rides/ride-update-123`)
+                .put(`/rides/ride-update-123`)
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     originLat: 36.8,
-                    originLng: 3.1, // Added originLng in send
+                    originLng: 3.1,
                 });
 
             expect(res.status).toBe(200);
