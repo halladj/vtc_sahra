@@ -1452,6 +1452,33 @@
 					"response": []
 				},
 				{
+					"name": "Get Current Rides",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{passengerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rides/current",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rides",
+								"current"
+							]
+						},
+						"description": "Get current (active) rides for the authenticated user. Returns only PENDING and ACCEPTED rides."
+					},
+					"response": []
+				},
+				{
 					"name": "Get Ride Details",
 					"request": {
 						"method": "GET",
