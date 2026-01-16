@@ -287,4 +287,55 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             expect(res.body.originLat).toBe(36.8);
         });
     });
+
+    describe("GET /rides/user/current - Get Current Rides", () => {
+        it("should return current rides (ACCEPTED and ONGOING) for authenticated user", async () => {
+            const mockCurrentRides = [
+                {
+                    id: "ride-1",
+                    userId: passengerPayload.userId,
+                    status: RideStatus.ACCEPTED,
+                    driver: { id: "driver-1", firstName: "John" },
+                    vehicle: { id: "vehicle-1", model: "Toyota Camry" },
+                },
+                {
+                    id: "ride-2",
+                    userId: passengerPayload.userId,
+                    status: RideStatus.ONGOING,
+                    driver: { id: "driver-2", firstName: "Jane" },
+                    vehicle: { id: "vehicle-2", model: "Honda Civic" },
+                },
+            ];
+
+            (db.ride.findMany as jest.Mock).mockResolvedValue(mockCurrentRides);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .get("/rides/user/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toHaveLength(2);
+            expect(res.body[0].status).toBe(RideStatus.ACCEPTED);
+            expect(res.body[1].status).toBe(RideStatus.ONGOING);
+        });
+
+        it("should return empty array when user has no current rides", async () => {
+            (db.ride.findMany as jest.Mock).mockResolvedValue([]);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .get("/rides/user/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toEqual([]);
+        });
+
+        it("should require authentication", async () => {
+            const res = await request(app).get("/rides/user/current");
+
+            expect(res.status).toBeGreaterThanOrEqual(400);
+        });
+    });
 });

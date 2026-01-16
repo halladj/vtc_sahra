@@ -123,6 +123,35 @@ export async function getRidesForUser(userId: string, status?: RideStatus) {
 }
 
 /**
+ * Get all current rides for a specific user (rides with ACCEPTED or ONGOING status)
+ */
+export async function getCurrentRidesForUser(userId: string) {
+    return db.ride.findMany({
+        where: {
+            userId: userId,
+            status: {
+                in: [RideStatus.ACCEPTED, RideStatus.ONGOING],
+            },
+        },
+        include: {
+            driver: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    photo: true,
+                },
+            },
+            vehicle: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+}
+
+/**
  * Get all rides for a specific driver
  */
 export async function getRidesForDriver(driverId: string, status?: RideStatus) {
