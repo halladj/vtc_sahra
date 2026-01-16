@@ -1,0 +1,68 @@
+{
+    "info": {
+        "name": "VTC WebSocket Tests",
+        "description": "WebSocket testing for real-time ride status updates",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "WebSocket - Driver Connection",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "ws://localhost:3000?token={{driverToken}}",
+                    "protocol": "ws",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "query": [
+                        {
+                            "key": "token",
+                            "value": "{{driverToken}}",
+                            "description": "JWT token for driver authentication"
+                        }
+                    ]
+                },
+                "description": "Connect as a driver to receive ride:created events when new rides are available"
+            }
+        },
+        {
+            "name": "WebSocket - Passenger Connection",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "ws://localhost:3000?token={{passengerToken}}",
+                    "protocol": "ws",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "query": [
+                        {
+                            "key": "token",
+                            "value": "{{passengerToken}}",
+                            "description": "JWT token for passenger authentication"
+                        }
+                    ]
+                },
+                "description": "Connect as a passenger to receive ride status updates"
+            }
+        }
+    ],
+    "event": [],
+    "variable": [
+        {
+            "key": "driverToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "passengerToken",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
