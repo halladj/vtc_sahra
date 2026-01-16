@@ -6,12 +6,13 @@ import {
     findRideById,
     getRidesForUser,
     getRidesForDriver,
-    getPendingRides,
-    acceptRide,
     updateRideStatus,
+    acceptRide,
+    getPendingRides,
     cancelRide,
     updateRide,
 } from "./ride.services";
+import { db } from "../../utils/db";
 import { estimateRidePrice, getRidePriceBreakdown } from "./ride.pricing.services";
 import { Role, RideStatus, RideType } from "@prisma/client";
 
@@ -207,20 +208,40 @@ router.get(
 );
 
 /**
- * GET /rides/user - Get all rides for the current user (passenger)
+ * GET /rides/current - Get current rides for the authenticated user (PENDING or ACCEPTED only)
  */
 router.get(
-    "/user",
+    "/current",
     isAuthenticated,
     async (req: AuthenticatedRequest, res: Response, next: any) => {
         try {
             const { userId } = req.payload!;
-            const { status } = req.query;
 
-            const rides = await getRidesForUser(
-                userId,
-                status as RideStatus | undefined
-            );
+            // Get only current rides (PENDING or ACCEPTED)
+            const rides = await db.ride.findMany({
+                where: {
+                    userId: userId,
+                    status: {
+                        in: [RideStatus.PENDING, RideStatus.ACCEPTED]
+                    }
+                },
+                include: {
+                    driver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            phoneNumber: true,
+                            photo: true,
+                        },
+                    },
+                    vehicle: true,
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+            });
+
             res.json(rides);
         } catch (error) {
             next(error);
