@@ -68,8 +68,10 @@ export async function createRide(data: {
         const emitter = getRideEmitter();
         emitter.emitRideCreated(ride);
     } catch (error) {
-        // Socket.IO not initialized yet (e.g., in tests)
-        console.log('WebSocket not available:', error);
+        // Socket.IO not initialized yet (e.g., in tests) - silent in test mode
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('WebSocket not available:', error);
+        }
     }
 
     return ride;
@@ -260,7 +262,9 @@ export async function acceptRide(
         const emitter = getRideEmitter();
         emitter.emitRideAccepted(updatedRide);
     } catch (error) {
-        console.log('WebSocket not available:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('WebSocket not available:', error);
+        }
     }
 
     return updatedRide;
@@ -338,7 +342,9 @@ export async function updateRideStatus(
         const emitter = getRideEmitter();
         emitter.emitRideStatusUpdated(updatedRide);
     } catch (error) {
-        console.log('WebSocket not available:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('WebSocket not available:', error);
+        }
     }
 
     return updatedRide;
@@ -405,7 +411,9 @@ export async function cancelRide(rideId: string, userId: string) {
         const emitter = getRideEmitter();
         emitter.emitRideCancelled(cancelledRide);
     } catch (error) {
-        console.log('WebSocket not available:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('WebSocket not available:', error);
+        }
     }
 
     return cancelledRide;
