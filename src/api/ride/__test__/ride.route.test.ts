@@ -10,6 +10,10 @@ jest.mock("../../../utils/db", () => ({
             create: jest.fn(),
             findUnique: jest.fn(),
             findMany: jest.fn(),
+            findFirst: jest.fn(),
+            update: jest.fn(),
+        },
+        wallet: {
             update: jest.fn(),
         },
         driverProfile: {
@@ -259,32 +263,108 @@ describe("Ride Routes - Coordinate Based Locations", () => {
         });
 
         it("should update ride details with coordinates", async () => {
+            const testUserId = passengerPayload.userId; // Define testUserId here
+            const token = generateToken(passengerPayload); // Define token here
+
             const mockRide = {
-                id: "ride-pending-1",
-                userId: passengerPayload.userId,
-                status: RideStatus.PENDING,
-                originLat: 36.7,
-                originLng: 3.0,
+                id: "ride-update-123",
+                userId: testUserId,
+                status: RideStatus.PENDING, // Added status
+                originLat: 36.7, // Added originLat
+                originLng: 3.0, // Added originLng
             };
 
             (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
             (db.ride.update as jest.Mock).mockResolvedValue({
                 ...mockRide,
                 originLat: 36.8,
-                originLng: 3.1,
+                originLng: 3.1, // Added originLng update
             });
 
-            const token = generateToken(passengerPayload);
             const res = await request(app)
-                .put("/rides/ride-pending-1")
+                .patch(`/api/v1/rides/ride-update-123`)
                 .set("Authorization", `Bearer ${token}`)
                 .send({
                     originLat: 36.8,
-                    originLng: 3.1,
+                    originLng: 3.1, // Added originLng in send
                 });
 
             expect(res.status).toBe(200);
             expect(res.body.originLat).toBe(36.8);
+        });
+    });
+
+    describe("GET /rides/current - Get Latest Current Ride", () => {
+        it("should return the newest PENDING or ACCEPTED ride", async () => {
+            const testUserId = passengerPayload.userId; // Define testUserId here
+            const token = generateToken(passengerPayload); // Define token here
+
+            const olderRide = {
+                id: "ride-old-123",
+                userId: testUserId,
+                status: RideStatus.PENDING,
+                createdAt: new Date("2024-01-01T10:00:00Z"),
+                originLat: 36.75,
+                originLng: 3.05,
+                destLat: 36.76,
+                destLng: 3.06,
+                price: 500,
+            };
+
+            const newerRide = {
+                id: "ride-new-456",
+                userId: testUserId,
+                status: RideStatus.ACCEPTED,
+                createdAt: new Date("2024-01-01T11:00:00Z"), // 1 hour later
+                originLat: 36.77,
+                originLng: 3.07,
+                destLat: 36.78,
+                destLng: 3.08,
+                price: 600,
+                driver: {
+                    id: "driver-123",
+                    firstName: "John",
+                    lastName: "Doe",
+                    phoneNumber: "+213123456789",
+                    photo: null,
+                },
+                vehicle: null,
+            };
+
+            // Mock returns the newer ride (findFirst with desc order)
+            (db.ride.findFirst as jest.Mock).mockResolvedValue(newerRide);
+
+            const res = await request(app)
+                .get("/rides/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeDefined();
+            expect(res.body.id).toBe("ride-new-456");
+            expect(res.body.status).toBe(RideStatus.ACCEPTED);
+            expect(db.ride.findFirst).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: {
+                        userId: testUserId,
+                        status: { in: [RideStatus.PENDING, RideStatus.ACCEPTED] }
+                    },
+                    orderBy: { createdAt: "desc" }
+                })
+            );
+        });
+
+        it("should return null when no current rides exist", async () => {
+            const testUserId = passengerPayload.userId; // Define testUserId here
+            const token = generateToken(passengerPayload); // Define token here
+
+            (db.ride.findFirst as jest.Mock).mockResolvedValue(null);
+
+            const res = await request(app)
+                .get("/rides/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toBeNull();
         });
     });
 
