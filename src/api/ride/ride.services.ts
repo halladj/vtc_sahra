@@ -137,14 +137,14 @@ export async function getRidesForUser(userId: string, status?: RideStatus) {
 }
 
 /**
- * Get all current rides for a specific user (rides with ACCEPTED or ONGOING status)
+ * Get all current rides for a specific user (rides with ACCEPTED, PENDING, or ONGOING status)
  */
 export async function getCurrentRidesForUser(userId: string) {
     return db.ride.findMany({
         where: {
             userId: userId,
             status: {
-                in: [RideStatus.ACCEPTED, RideStatus.ONGOING],
+                in: [RideStatus.ACCEPTED, RideStatus.ONGOING, RideStatus.PENDING],
             },
         },
         include: {

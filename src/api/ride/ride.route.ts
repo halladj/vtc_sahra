@@ -4,16 +4,14 @@ import { isAuthenticated, requireRole } from "../../middlewares/middlewares";
 import {
     createRide,
     findRideById,
-    getRidesForUser,
     getCurrentRidesForUser,
     getRidesForDriver,
-    updateRideStatus,
-    acceptRide,
     getPendingRides,
+    acceptRide,
+    updateRideStatus,
     cancelRide,
     updateRide,
 } from "./ride.services";
-import { db } from "../../utils/db";
 import { estimateRidePrice, getRidePriceBreakdown } from "./ride.pricing.services";
 import { Role, RideStatus, RideType } from "@prisma/client";
 
@@ -209,7 +207,7 @@ router.get(
 );
 
 /**
- * GET /rides/current - Get current ride for the authenticated user (latest PENDING or ACCEPTED)
+ * GET /rides/me - Get current ride for the authenticated user
  */
 router.get(
     "/current",
@@ -217,50 +215,13 @@ router.get(
     async (req: AuthenticatedRequest, res: Response, next: any) => {
         try {
             const { userId } = req.payload!;
+            const { status } = req.query;
 
-            // Get only the latest current ride (PENDING or ACCEPTED)
-            const ride = await db.ride.findFirst({
-                where: {
-                    userId: userId,
-                    status: {
-                        in: [RideStatus.PENDING, RideStatus.ACCEPTED]
-                    }
-                },
-                include: {
-                    driver: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                            phoneNumber: true,
-                            photo: true,
-                        },
-                    },
-                    vehicle: true,
-                },
-                orderBy: {
-                    createdAt: "desc",
-                },
-            });
-
-            res.json(ride); // Returns single ride or null
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-/**
- * GET /rides/user/current - Get all current rides for the current user (ACCEPTED or ONGOING)
- */
-router.get(
-    "/user/current",
-    isAuthenticated,
-    async (req: AuthenticatedRequest, res: Response, next: any) => {
-        try {
-            const { userId } = req.payload!;
-            const rides = await getCurrentRidesForUser(userId);
-            res.json(rides);
+            const ride = await getCurrentRidesForUser(
+                userId,
+                // status as RideStatus | undefined
+            );
+            res.json(ride);
         } catch (error) {
             next(error);
         }
