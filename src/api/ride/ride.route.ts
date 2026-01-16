@@ -5,6 +5,7 @@ import {
     createRide,
     findRideById,
     getRidesForUser,
+    getCurrentRidesForUser,
     getRidesForDriver,
     getPendingRides,
     acceptRide,
@@ -221,6 +222,23 @@ router.get(
                 userId,
                 status as RideStatus | undefined
             );
+            res.json(rides);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+/**
+ * GET /rides/user/current - Get all current rides for the current user (ACCEPTED or ONGOING)
+ */
+router.get(
+    "/user/current",
+    isAuthenticated,
+    async (req: AuthenticatedRequest, res: Response, next: any) => {
+        try {
+            const { userId } = req.payload!;
+            const rides = await getCurrentRidesForUser(userId);
             res.json(rides);
         } catch (error) {
             next(error);
