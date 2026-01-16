@@ -2,6 +2,7 @@ import { RideStatus, RideType } from "@prisma/client";
 import { db } from "../../utils/db";
 import { processDriverCommission, processDriverCancellationPenalty } from "./ride.payment.services";
 import { estimateRidePrice } from "./ride.pricing.services";
+import { getRideEmitter } from "../../socket";
 
 /**
  * Create a new ride for a passenger
@@ -34,7 +35,7 @@ export async function createRide(data: {
         destLng: data.destLng,
     });
 
-    return db.ride.create({
+    const ride = await db.ride.create({
         data: {
             userId: data.userId,
             type: data.type,
@@ -61,6 +62,17 @@ export async function createRide(data: {
             },
         },
     });
+
+    // Emit ride:created event to all drivers
+    try {
+        const emitter = getRideEmitter();
+        emitter.emitRideCreated(ride);
+    } catch (error) {
+        // Socket.IO not initialized yet (e.g., in tests)
+        console.log('WebSocket not available:', error);
+    }
+
+    return ride;
 }
 
 /**
@@ -213,7 +225,7 @@ export async function acceptRide(
     }
 
     // Update the ride
-    return db.ride.update({
+    const updatedRide = await db.ride.update({
         where: { id: rideId },
         data: {
             driverId: driverId,
@@ -242,6 +254,16 @@ export async function acceptRide(
             vehicle: true,
         },
     });
+
+    // Emit ride:accepted event
+    try {
+        const emitter = getRideEmitter();
+        emitter.emitRideAccepted(updatedRide);
+    } catch (error) {
+        console.log('WebSocket not available:', error);
+    }
+
+    return updatedRide;
 }
 
 /**
@@ -311,6 +333,14 @@ export async function updateRideStatus(
         );
     }
 
+    // Emit ride:statusUpdated event
+    try {
+        const emitter = getRideEmitter();
+        emitter.emitRideStatusUpdated(updatedRide);
+    } catch (error) {
+        console.log('WebSocket not available:', error);
+    }
+
     return updatedRide;
 }
 
@@ -344,7 +374,7 @@ export async function cancelRide(rideId: string, userId: string) {
         await processDriverCancellationPenalty(rideId, ride.driverId, ride.price);
     }
 
-    return db.ride.update({
+    const cancelledRide = await db.ride.update({
         where: { id: rideId },
         data: { status: RideStatus.CANCELLED },
         include: {
@@ -369,6 +399,16 @@ export async function cancelRide(rideId: string, userId: string) {
             vehicle: true,
         },
     });
+
+    // Emit ride:cancelled event
+    try {
+        const emitter = getRideEmitter();
+        emitter.emitRideCancelled(cancelledRide);
+    } catch (error) {
+        console.log('WebSocket not available:', error);
+    }
+
+    return cancelledRide;
 }
 
 /**
