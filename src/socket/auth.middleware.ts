@@ -14,7 +14,13 @@ export const socketAuthMiddleware = async (
     next: (err?: Error) => void
 ) => {
     try {
-        const token = socket.handshake.auth.token;
+        // Try to get token from auth handshake (for proper clients)
+        let token = socket.handshake.auth.token;
+
+        // Fallback to query parameter (for Postman testing)
+        if (!token) {
+            token = socket.handshake.query.token as string;
+        }
 
         if (!token) {
             return next(new Error('Authentication token required'));
