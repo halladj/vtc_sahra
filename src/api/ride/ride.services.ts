@@ -22,6 +22,24 @@ export async function createRide(data: {
     seatCount?: number;
     packageWeight?: number;
 }) {
+    // Check if user already has an active ride
+    const existingActiveRide = await db.ride.findFirst({
+        where: {
+            userId: data.userId,
+            status: {
+                in: [RideStatus.PENDING, RideStatus.ACCEPTED, RideStatus.ONGOING]
+            }
+        },
+        select: {
+            id: true,
+            status: true
+        }
+    });
+
+    if (existingActiveRide) {
+        throw new Error(`You already have an active ride (${existingActiveRide.status}). Please complete or cancel it before creating a new one.`);
+    }
+
     // Calculate price if not provided
     const finalPrice = data.price ?? estimateRidePrice({
         type: data.type,
@@ -166,8 +184,34 @@ export async function getCurrentRidesForUser(userId: string) {
 }
 
 /**
- * Get all rides for a specific driver
+ * Get the current (active) ride for a user
+ * Returns the latest PENDING, ACCEPTED, or ONGOING ride
  */
+export async function getCurrentRide(userId: string) {
+    return db.ride.findFirst({
+        where: {
+            userId: userId,
+            status: {
+                in: [RideStatus.PENDING, RideStatus.ACCEPTED, RideStatus.ONGOING]
+            }
+        },
+        include: {
+            driver: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    photo: true,
+                },
+            },
+            vehicle: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+}
 export async function getRidesForDriver(driverId: string, status?: RideStatus) {
     return db.ride.findMany({
         where: {
