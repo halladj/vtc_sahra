@@ -22,6 +22,24 @@ export async function createRide(data: {
     seatCount?: number;
     packageWeight?: number;
 }) {
+    // Check if user already has an active ride
+    const existingActiveRide = await db.ride.findFirst({
+        where: {
+            userId: data.userId,
+            status: {
+                in: [RideStatus.PENDING, RideStatus.ACCEPTED, RideStatus.ONGOING]
+            }
+        },
+        select: {
+            id: true,
+            status: true
+        }
+    });
+
+    if (existingActiveRide) {
+        throw new Error(`You already have an active ride (${existingActiveRide.status}). Please complete or cancel it before creating a new one.`);
+    }
+
     // Calculate price if not provided
     const finalPrice = data.price ?? estimateRidePrice({
         type: data.type,
