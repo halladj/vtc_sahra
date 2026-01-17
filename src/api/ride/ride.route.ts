@@ -207,7 +207,30 @@ router.get(
 );
 
 /**
- * GET /rides/me - Get current ride for the authenticated user
+ * GET /rides/user - Get all rides for the authenticated user (passenger) with optional status filter
+ */
+router.get(
+    "/user",
+    isAuthenticated,
+    async (req: AuthenticatedRequest, res: Response, next: any) => {
+        try {
+            const { userId } = req.payload!;
+            const { status } = req.query;
+
+            const rides = await getRidesForUser(
+                userId,
+                status as RideStatus | undefined
+            );
+            res.json(rides);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+/**
+ * GET /rides/current - Get current ride for the authenticated user
+ * Returns latest PENDING, ACCEPTED, or ONGOING ride
  */
 router.get(
     "/current",
@@ -215,12 +238,7 @@ router.get(
     async (req: AuthenticatedRequest, res: Response, next: any) => {
         try {
             const { userId } = req.payload!;
-            const { status } = req.query;
-
-            const ride = await getCurrentRidesForUser(
-                userId,
-                // status as RideStatus | undefined
-            );
+            const ride = await getCurrentRide(userId);
             res.json(ride);
         } catch (error) {
             next(error);
