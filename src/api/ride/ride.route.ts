@@ -4,6 +4,8 @@ import { isAuthenticated, requireRole } from "../../middlewares/middlewares";
 import {
     createRide,
     findRideById,
+    getRidesForUser,
+    getCurrentRide,
     getCurrentRidesForUser,
     getRidesForDriver,
     getPendingRides,
