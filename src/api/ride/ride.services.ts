@@ -184,8 +184,34 @@ export async function getCurrentRidesForUser(userId: string) {
 }
 
 /**
- * Get all rides for a specific driver
+ * Get the current (active) ride for a user
+ * Returns the latest PENDING, ACCEPTED, or ONGOING ride
  */
+export async function getCurrentRide(userId: string) {
+    return db.ride.findFirst({
+        where: {
+            userId: userId,
+            status: {
+                in: [RideStatus.PENDING, RideStatus.ACCEPTED, RideStatus.ONGOING]
+            }
+        },
+        include: {
+            driver: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    photo: true,
+                },
+            },
+            vehicle: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+}
 export async function getRidesForDriver(driverId: string, status?: RideStatus) {
     return db.ride.findMany({
         where: {
