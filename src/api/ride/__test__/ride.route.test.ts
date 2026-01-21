@@ -12,6 +12,7 @@ jest.mock("../../../utils/db", () => ({
             findMany: jest.fn(),
             findFirst: jest.fn(),
             update: jest.fn(),
+            getCurrentRideForDriver: jest.fn(),
         },
         wallet: {
             update: jest.fn(),
@@ -354,8 +355,8 @@ describe("Ride Routes - Coordinate Based Locations", () => {
         });
 
         it("should return null when no current rides exist", async () => {
-            const testUserId = passengerPayload.userId; // Define testUserId here
-            const token = generateToken(passengerPayload); // Define token here
+            const testUserId = passengerPayload.userId;
+            const token = generateToken(passengerPayload);
 
             (db.ride.findFirst as jest.Mock).mockResolvedValue(null);
 
@@ -365,6 +366,90 @@ describe("Ride Routes - Coordinate Based Locations", () => {
 
             expect(res.status).toBe(200);
             expect(res.body).toBeNull();
+        });
+
+        it("should return passenger's current ride (role=USER)", async () => {
+            const passengerRide = {
+                id: "passenger-ride-123",
+                userId: passengerPayload.userId,
+                status: RideStatus.PENDING,
+                driver: null,
+                vehicle: null,
+            };
+
+            (db.ride.findFirst as jest.Mock).mockResolvedValue(passengerRide);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .get("/rides/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.id).toBe("passenger-ride-123");
+            expect(res.body.status).toBe(RideStatus.PENDING);
+
+            // Verify it was called with userId filter
+            expect(db.ride.findFirst).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: expect.objectContaining({
+                        userId: passengerPayload.userId
+                    })
+                })
+            );
+        });
+
+        it("should return driver's current ride (role=DRIVER)", async () => {
+            const driverRide = {
+                id: "driver-ride-456",
+                driverId: driverPayload.userId,
+                status: RideStatus.ONGOING,
+                user: {
+                    id: "passenger-xyz",
+                    firstName: "John",
+                    lastName: "Doe",
+                },
+                vehicle: { id: "vehicle-1" },
+            };
+
+            (db.ride.findFirst as jest.Mock).mockResolvedValue(driverRide);
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .get("/rides/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.id).toBe("driver-ride-456");
+            expect(res.body.status).toBe(RideStatus.ONGOING);
+
+            // Verify it was called with driverId filter
+            expect(db.ride.findFirst).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: expect.objectContaining({
+                        driverId: driverPayload.userId
+                    })
+                })
+            );
+        });
+
+        it("should filter PENDING rides for drivers (ACCEPTED/ONGOING only)", async () => {
+            (db.ride.findFirst as jest.Mock).mockResolvedValue(null);
+
+            const token = generateToken(driverPayload);
+            await request(app)
+                .get("/rides/current")
+                .set("Authorization", `Bearer ${token}`);
+
+            // Verify driver query excludes PENDING
+            expect(db.ride.findFirst).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: expect.objectContaining({
+                        status: {
+                            in: [RideStatus.ACCEPTED, RideStatus.ONGOING]
+                        }
+                    })
+                })
+            );
         });
     });
 

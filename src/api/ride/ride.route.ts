@@ -6,6 +6,7 @@ import {
     findRideById,
     getRidesForUser,
     getCurrentRide,
+    getCurrentRideForDriver,
     getCurrentRidesForUser,
     getRidesForDriver,
     getPendingRides,
@@ -231,16 +232,22 @@ router.get(
 );
 
 /**
- * GET /rides/current - Get current ride for the authenticated user
- * Returns latest PENDING, ACCEPTED, or ONGOING ride
+ * GET /rides/current - Get current ride for the authenticated user (role-aware)
+ * - Passengers: Returns latest PENDING, ACCEPTED, or ONGOING ride (filtered by userId)
+ * - Drivers: Returns latest ACCEPTED or ONGOING ride (filtered by driverId)
  */
 router.get(
     "/current",
     isAuthenticated,
     async (req: AuthenticatedRequest, res: Response, next: any) => {
         try {
-            const { userId } = req.payload!;
-            const ride = await getCurrentRide(userId);
+            const { userId, role } = req.payload!;
+
+            // Role-aware: drivers filter by driverId, passengers by userId
+            const ride = role === Role.DRIVER
+                ? await getCurrentRideForDriver(userId)
+                : await getCurrentRide(userId);
+
             res.json(ride);
         } catch (error) {
             next(error);

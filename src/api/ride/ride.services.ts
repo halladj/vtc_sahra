@@ -212,6 +212,37 @@ export async function getCurrentRide(userId: string) {
         },
     });
 }
+
+/**
+ * Get the current (active) ride for a driver
+ * Returns the latest ACCEPTED or ONGOING ride
+ * Note: PENDING rides are not included as driver hasn't accepted them yet
+ */
+export async function getCurrentRideForDriver(driverId: string) {
+    return db.ride.findFirst({
+        where: {
+            driverId: driverId,
+            status: {
+                in: [RideStatus.ACCEPTED, RideStatus.ONGOING]
+            }
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    photo: true,
+                },
+            },
+            vehicle: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+}
 export async function getRidesForDriver(driverId: string, status?: RideStatus) {
     return db.ride.findMany({
         where: {
