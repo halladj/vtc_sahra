@@ -43,13 +43,15 @@ describe('Location Tracking - Validation Logic', () => {
 
     it('blocks tracking for COMPLETED status', () => {
         const status = RideStatus.COMPLETED;
-        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
+        const validStatuses: RideStatus[] = [RideStatus.ACCEPTED, RideStatus.ONGOING];
+        const isValidStatus = validStatuses.includes(status);
         expect(isValidStatus).toBe(false);
     });
 
     it('blocks tracking for PENDING status', () => {
         const status = RideStatus.PENDING;
-        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
+        const validStatuses: RideStatus[] = [RideStatus.ACCEPTED, RideStatus.ONGOING];
+        const isValidStatus = validStatuses.includes(status);
         expect(isValidStatus).toBe(false);
     });
 
