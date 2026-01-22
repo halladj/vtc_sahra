@@ -16,6 +16,7 @@ jest.mock("../../../utils/db", () => ({
         },
         wallet: {
             update: jest.fn(),
+            findUnique: jest.fn(),  // Added for balance check
         },
         driverProfile: {
             findUnique: jest.fn(),
@@ -355,6 +356,98 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             expect(res.status).toBe(200);
             expect(res.body.status).toBe(RideStatus.PENDING);
             expect(res.body.driverId).toBeNull();
+        });
+    });
+
+    describe("Minimum Balance Check for Drivers", () => {
+        const mockDriverProfile = { id: "driver-profile-123" };
+        const mockVehicle = {
+            id: "vehicle-123",
+            driverId: "driver-profile-123",
+            status: "APPROVED"
+        };
+        const mockRide = {
+            id: "ride-balance-test",
+            userId: "passenger-456",
+            status: RideStatus.PENDING,
+            price: 25000  // 25,000 DA
+        };
+
+        beforeEach(() => {
+            (db.driverProfile.findUnique as jest.Mock).mockResolvedValue(mockDriverProfile);
+            (db.vehicle.findUnique as jest.Mock).mockResolvedValue(mockVehicle);
+        });
+
+        it("should reject ride acceptance if driver balance < 10% of price", async () => {
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.wallet.findUnique as jest.Mock).mockResolvedValue({
+                userId: driverPayload.userId,
+                balance: 1000  // Less than 10% of 25,000 (need 2,500)
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .post(`/rides/${mockRide.id}/accept`)
+                .set("Authorization", `Bearer ${token}`)
+                .send({ vehicleId: mockVehicle.id });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/Insufficient balance/i);
+            expect(res.body.error).toMatch(/2,500/);  // Minimum required
+        });
+
+        it("should allow ride acceptance if driver balance >= 10% of price", async () => {
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.wallet.findUnique as jest.Mock).mockResolvedValue({
+                userId: driverPayload.userId,
+                balance: 5000  // More than 10% of 25,000
+            });
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                status: RideStatus.ACCEPTED,
+                driverId: driverPayload.userId
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .post(`/rides/${mockRide.id}/accept`)
+                .set("Authorization", `Bearer ${token}`)
+                .send({ vehicleId: mockVehicle.id });
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe(RideStatus.ACCEPTED);
+        });
+
+        it("should reject if driver wallet not found", async () => {
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.wallet.findUnique as jest.Mock).mockResolvedValue(null);
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .post(`/rides/${mockRide.id}/accept`)
+                .set("Authorization", `Bearer ${token}`)
+                .send({ vehicleId: mockVehicle.id });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/wallet not found/i);
+        });
+
+        it("should calculate correct minimum for expensive rides", async () => {
+            const expensiveRide = { ...mockRide, price: 100000 };  // 100,000 DA
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(expensiveRide);
+            (db.wallet.findUnique as jest.Mock).mockResolvedValue({
+                userId: driverPayload.userId,
+                balance: 5000  // Less than 10,000 needed
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .post(`/rides/${mockRide.id}/accept`)
+                .set("Authorization", `Bearer ${token}`)
+                .send({ vehicleId: mockVehicle.id });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/10,000/);  // 10% of 100,000
         });
     });
 
