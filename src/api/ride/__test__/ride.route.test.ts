@@ -352,15 +352,9 @@ describe("Ride Routes - Coordinate Based Locations", () => {
                 .put("/rides/ride-clear-driver/cancel")
                 .set("Authorization", `Bearer ${token}`);
 
-            // Verify driverId was set to null in the update call
-            expect(db.ride.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    data: expect.objectContaining({
-                        status: RideStatus.PENDING,
-                        driverId: null
-                    })
-                })
-            );
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe(RideStatus.PENDING);
+            expect(res.body.driverId).toBeNull();
         });
     });
 
