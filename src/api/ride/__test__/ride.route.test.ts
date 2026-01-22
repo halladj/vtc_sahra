@@ -246,6 +246,124 @@ describe("Ride Routes - Coordinate Based Locations", () => {
         });
     });
 
+    describe("Driver Cancel → PENDING Feature", () => {
+        it("should return ACCEPTED ride to PENDING when driver cancels", async () => {
+            const mockRide = {
+                id: "ride-cancel-test",
+                userId: "passenger-123",
+                driverId: driverPayload.userId,
+                status: RideStatus.ACCEPTED,
+                price: 100000,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                status: RideStatus.PENDING,
+                driverId: null,
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .put("/rides/ride-cancel-test/cancel")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe(RideStatus.PENDING);
+            expect(res.body.driverId).toBeNull();
+
+            // Verify penalty was charged
+            expect(paymentServices.processDriverCancellationPenalty).toHaveBeenCalledWith(
+                "ride-cancel-test",
+                driverPayload.userId,
+                100000
+            );
+        });
+
+        it("should keep CANCELLED status when driver cancels ONGOING ride", async () => {
+            const mockRide = {
+                id: "ride-ongoing",
+                userId: "passenger-123",
+                driverId: driverPayload.userId,
+                status: RideStatus.ONGOING,
+                price: 100000,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                status: RideStatus.CANCELLED,
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .put("/rides/ride-ongoing/cancel")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe(RideStatus.CANCELLED);
+        });
+
+        it("should keep CANCELLED status when passenger cancels", async () => {
+            const mockRide = {
+                id: "ride-passenger-cancel",
+                userId: passengerPayload.userId,
+                driverId: "driver-456",
+                status: RideStatus.ACCEPTED,
+                price: 100000,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                status: RideStatus.CANCELLED,
+            });
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .put("/rides/ride-passenger-cancel/cancel")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe(RideStatus.CANCELLED);
+
+            // Verify NO penalty for passenger
+            expect(paymentServices.processDriverCancellationPenalty).not.toHaveBeenCalled();
+        });
+
+        it("should clear driverId when returning to PENDING", async () => {
+            const mockRide = {
+                id: "ride-clear-driver",
+                userId: "passenger-123",
+                driverId: driverPayload.userId,
+                status: RideStatus.ACCEPTED,
+                price: 100000,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(mockRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...mockRide,
+                status: RideStatus.PENDING,
+                driverId: null,
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .put("/rides/ride-clear-driver/cancel")
+                .set("Authorization", `Bearer ${token}`);
+
+            // Verify driverId was set to null in the update call
+            expect(db.ride.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        status: RideStatus.PENDING,
+                        driverId: null
+                    })
+                })
+            );
+        });
+    });
+
     describe("Ride Updates & Estimation", () => {
         it("should estimate price with coordinates", async () => {
             const res = await request(app)
