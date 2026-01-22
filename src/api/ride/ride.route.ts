@@ -21,7 +21,11 @@ import { Role, RideStatus, RideType } from "@prisma/client";
 const router = express.Router();
 
 interface AuthenticatedRequest extends Request {
-    payload?: JwtPayload;
+    payload?: JwtPayload & { userId: string; role: Role };
+}
+
+interface CustomError extends Error {
+    statusCode?: number;
 }
 
 /**
@@ -98,8 +102,9 @@ router.post(
                 estimatedPrice,
                 breakdown,
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -187,7 +192,8 @@ router.post(
 
             res.status(201).json(ride);
         } catch (error: any) {
-            next(error);
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -203,8 +209,9 @@ router.get(
         try {
             const rides = await getPendingRides();
             res.json(rides);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -225,8 +232,9 @@ router.get(
                 status as RideStatus | undefined
             );
             res.json(rides);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -249,8 +257,9 @@ router.get(
                 : await getCurrentRide(userId);
 
             res.json(ride);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -272,8 +281,9 @@ router.get(
                 status as RideStatus | undefined
             );
             res.json(rides);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -307,8 +317,9 @@ router.get(
             }
 
             res.json(ride);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -336,8 +347,9 @@ router.post(
 
             const ride = await acceptRide(rideId, userId, vehicleId);
             res.json(ride);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -377,7 +389,8 @@ router.put(
                     code: "INSUFFICIENT_BALANCE"
                 });
             }
-            next(error);
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -399,8 +412,9 @@ router.put(
 
             const ride = await cancelRide(rideId, userId);
             res.json(ride);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
@@ -445,8 +459,9 @@ router.put(
             });
 
             res.json(ride);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );

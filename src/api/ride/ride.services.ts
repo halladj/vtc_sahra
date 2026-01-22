@@ -3,6 +3,7 @@ import { db } from "../../utils/db";
 import { processDriverCommission, processDriverCancellationPenalty } from "./ride.payment.services";
 import { estimateRidePrice } from "./ride.pricing.services";
 import { getRideEmitter } from "../../socket";
+import { UnauthorizedError, NotFoundError, BadRequestError } from "../../utils/errors";
 
 /**
  * Create a new ride for a passenger
@@ -306,7 +307,7 @@ export async function acceptRide(
     });
 
     if (!ride) {
-        throw new Error("Ride not found");
+        throw new NotFoundError("Ride not found");
     }
 
     if (ride.status !== RideStatus.PENDING) {
@@ -388,21 +389,21 @@ export async function updateRideStatus(
     });
 
     if (!ride) {
-        throw new Error("Ride not found");
+        throw new NotFoundError("Ride not found");
     }
 
     // Verify the user is either the passenger or the driver
     if (ride.userId !== userId && ride.driverId !== userId) {
-        throw new Error("Unauthorized: You are not part of this ride");
+        throw new UnauthorizedError("You are not authorized to update this ride");
     }
 
     // Business logic for status transitions
     if (status === RideStatus.ONGOING && ride.status !== RideStatus.ACCEPTED) {
-        throw new Error("Can only start an accepted ride");
+        throw new BadRequestError("Can only start an accepted ride");
     }
 
     if (status === RideStatus.COMPLETED && ride.status !== RideStatus.ONGOING) {
-        throw new Error("Can only complete an ongoing ride");
+        throw new BadRequestError("Can only complete an ongoing ride");
     }
 
     // Update the ride
@@ -463,12 +464,12 @@ export async function cancelRide(rideId: string, userId: string) {
     });
 
     if (!ride) {
-        throw new Error("Ride not found");
+        throw new NotFoundError("Ride not found");
     }
 
     // Verify the user is either the passenger or the driver
     if (ride.userId !== userId && ride.driverId !== userId) {
-        throw new Error("Unauthorized: You are not part of this ride");
+        throw new UnauthorizedError("You are not authorized to update this ride");
     }
 
     // Can't cancel completed rides
@@ -546,17 +547,17 @@ export async function updateRide(
     });
 
     if (!ride) {
-        throw new Error("Ride not found");
+        throw new NotFoundError("Ride not found");
     }
 
     // Only the passenger can update ride details
     if (ride.userId !== userId) {
-        throw new Error("Unauthorized: Only the passenger can update ride details");
+        throw new UnauthorizedError("Only the passenger can update ride details");
     }
 
     // Can only update pending rides
     if (ride.status !== RideStatus.PENDING) {
-        throw new Error("Can only update pending rides");
+        throw new BadRequestError("Can only update pending rides");
     }
 
     return db.ride.update({
