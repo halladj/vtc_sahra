@@ -1,5 +1,7 @@
 import { Server } from 'socket.io';
 import { RIDE_EVENTS, ROOMS } from '../events/ride.events';
+import { getAvailableDriverLocations } from '../handlers/driver-location.handler';
+import { calculateDistance, estimateTravelTime } from '../../utils/distance';
 
 /**
  * Centralized event emitters for ride events
@@ -7,13 +9,50 @@ import { RIDE_EVENTS, ROOMS } from '../events/ride.events';
  */
 
 export class RideEmitter {
+    private readonly MAX_BROADCAST_DISTANCE_KM =
+        Number(process.env.MAX_RIDE_BROADCAST_DISTANCE_KM) || 10;
+
     constructor(private io: Server) { }
 
     /**
-     * Emit ride:created to all drivers
+     * Emit ride:created to nearby drivers only (within configured radius)
      */
     emitRideCreated(ride: any) {
-        this.io.to(ROOMS.drivers()).emit(RIDE_EVENTS.CREATED, { ride });
+        const driverLocations = getAvailableDriverLocations();
+
+        // Filter drivers within radius
+        const nearbyDrivers: Array<{ driverId: string; distance: number; eta: number }> = [];
+
+        for (const [driverId, location] of driverLocations.entries()) {
+            const distance = calculateDistance(
+                location.latitude,
+                location.longitude,
+                ride.originLat,
+                ride.originLng
+            );
+
+            if (distance <= this.MAX_BROADCAST_DISTANCE_KM) {
+                nearbyDrivers.push({
+                    driverId,
+                    distance,
+                    eta: estimateTravelTime(distance)
+                });
+            }
+        }
+
+        // Broadcast to each nearby driver with personalized distance info
+        nearbyDrivers.forEach(({ driverId, distance, eta }) => {
+            this.io.to(ROOMS.user(driverId)).emit(RIDE_EVENTS.CREATED, {
+                ride,
+                distance: Number(distance.toFixed(2)),
+                estimatedArrival: eta
+            });
+        });
+
+        // Log for debugging
+        if (process.env.NODE_ENV !== 'test') {
+            console.log(`📍 Broadcasted ride ${ride.id} to ${nearbyDrivers.length} nearby drivers`);
+        }
     }
 
     /**

@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './auth.middleware';
 import { ROOMS } from './events/ride.events';
 import { setupLocationHandlers } from './handlers/location.handler';
+import { setupDriverLocationHandlers } from './handlers/driver-location.handler';
 import { Role } from '@prisma/client';
 
 /**
@@ -39,4 +40,7 @@ export const handleConnection = (io: Server, socket: AuthenticatedSocket) => {
 
     // Setup location tracking handlers
     setupLocationHandlers(io, socket);
+
+    // Setup driver location handlers (for available driver positions)
+    setupDriverLocationHandlers(io, socket);
 };
