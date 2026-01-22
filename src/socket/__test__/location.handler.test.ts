@@ -5,7 +5,9 @@ import { RideStatus } from '@prisma/client';
 jest.mock('../../utils/db', () => ({ db: { ride: { findUnique: jest.fn() } } }));
 
 describe('Location Tracking - Validation Logic', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
     it('validates latitude range', () => {
         expect(36.7538 >= -90 && 36.7538 <= 90).toBe(true);
@@ -28,22 +30,26 @@ describe('Location Tracking - Validation Logic', () => {
     });
 
     it('allows tracking for ACCEPTED status', () => {
-        const isValidStatus = RideStatus.ACCEPTED === RideStatus.ACCEPTED || RideStatus.ACCEPTED === RideStatus.ONGOING;
+        const status = RideStatus.ACCEPTED;
+        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
         expect(isValidStatus).toBe(true);
     });
 
     it('allows tracking for ONGOING status', () => {
-        const isValidStatus = RideStatus.ONGOING === RideStatus.ACCEPTED || RideStatus.ONGOING === RideStatus.ONGOING;
+        const status = RideStatus.ONGOING;
+        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
         expect(isValidStatus).toBe(true);
     });
 
     it('blocks tracking for COMPLETED status', () => {
-        const isValidStatus = RideStatus.COMPLETED === RideStatus.ACCEPTED || RideStatus.COMPLETED === RideStatus.ONGOING;
+        const status = RideStatus.COMPLETED;
+        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
         expect(isValidStatus).toBe(false);
     });
 
     it('blocks tracking for PENDING status', () => {
-        const isValidStatus = RideStatus.PENDING === RideStatus.ACCEPTED || RideStatus.PENDING === RideStatus.ONGOING;
+        const status = RideStatus.PENDING;
+        const isValidStatus = [RideStatus.ACCEPTED, RideStatus.ONGOING].includes(status);
         expect(isValidStatus).toBe(false);
     });
 
