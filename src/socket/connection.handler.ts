@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './auth.middleware';
 import { ROOMS } from './events/ride.events';
+import { setupLocationHandlers } from './handlers/location.handler';
 import { Role } from '@prisma/client';
 
 /**
@@ -35,4 +36,7 @@ export const handleConnection = (io: Server, socket: AuthenticatedSocket) => {
     socket.on('heartbeat:response', () => {
         // Client is alive, no action needed
     });
+
+    // Setup location tracking handlers
+    setupLocationHandlers(io, socket);
 };
