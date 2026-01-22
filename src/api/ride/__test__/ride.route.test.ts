@@ -16,6 +16,7 @@ jest.mock("../../../utils/db", () => ({
         },
         wallet: {
             update: jest.fn(),
+            findUnique: jest.fn(),  // Added for balance check
         },
         driverProfile: {
             findUnique: jest.fn(),
