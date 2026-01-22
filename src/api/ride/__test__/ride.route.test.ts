@@ -559,5 +559,147 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             expect(res.body).toHaveLength(2);
         });
     });
+
+    describe("Authorization - Ride Updates", () => {
+        const otherUserPayload = { userId: "other-user-789", role: Role.USER };
+
+        it("should reject updating someone else's ride (403 Forbidden)", async () => {
+            const someoneElsesRide = {
+                id: "ride-123",
+                userId: "passenger-123",  // Different user
+                status: RideStatus.PENDING,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(someoneElsesRide);
+
+            const token = generateToken(otherUserPayload);
+            const res = await request(app)
+                .put("/rides/ride-123")
+                .set("Authorization", `Bearer ${token}`)
+                .send({
+                    originLat: 36.8,
+                    originLng: 3.1,
+                });
+
+            expect(res.status).toBe(403);
+            expect(res.body.error).toMatch(/not authorized|only the passenger/i);
+        });
+
+        it("should reject status update from non-participant (403 Forbidden)", async () => {
+            const ride = {
+                id: "ride-456",
+                userId: "passenger-123",
+                driverId: "driver-456",
+                status: RideStatus.ACCEPTED,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(ride);
+
+            const token = generateToken(otherUserPayload);  // Not passenger or driver
+            const res = await request(app)
+                .put("/rides/ride-456/status")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ status: RideStatus.ONGOING });
+
+            expect(res.status).toBe(403);
+            expect(res.body.error).toMatch(/not authorized/i);
+        });
+
+        it("should allow passenger to update their own PENDING ride", async () => {
+            const passengerRide = {
+                id: "ride-789",
+                userId: passengerPayload.userId,
+                status: RideStatus.PENDING,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(passengerRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...passengerRide,
+                originLat: 36.8,
+            });
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .put("/rides/ride-789")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ originLat: 36.8 });
+
+            expect(res.status).toBe(200);
+        });
+
+        it("should allow driver to update status of their ride", async () => {
+            const driverRide = {
+                id: "ride-driver-123",
+                userId: "passenger-xyz",
+                driverId: driverPayload.userId,  // Driver's ride
+                status: RideStatus.ACCEPTED,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(driverRide);
+            (db.ride.update as jest.Mock).mockResolvedValue({
+                ...driverRide,
+                status: RideStatus.ONGOING,
+            });
+
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .put("/rides/ride-driver-123/status")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ status: RideStatus.ONGOING });
+
+            expect(res.status).toBe(200);
+        });
+
+        it("should reject cancel from non-participant (403 Forbidden)", async () => {
+            const ride = {
+                id: "ride-cancel-123",
+                userId: "passenger-123",
+                driverId: "driver-456",
+                status: RideStatus.ACCEPTED,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(ride);
+
+            const token = generateToken(otherUserPayload);
+            const res = await request(app)
+                .put("/rides/ride-cancel-123/cancel")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(403);
+            expect(res.body.error).toMatch(/not authorized/i);
+        });
+
+        it("should return 404 for non-existent ride", async () => {
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(null);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .put("/rides/nonexistent-ride")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ originLat: 36.8 });
+
+            expect(res.status).toBe(404);
+            expect(res.body.error).toMatch(/not found/i);
+        });
+
+        it("should return 400 for invalid status transitions", async () => {
+            const ride = {
+                id: "ride-transition-123",
+                userId: passengerPayload.userId,
+                status: RideStatus.PENDING,
+            };
+
+            (db.ride.findUnique as jest.Mock).mockResolvedValue(ride);
+
+            const token = generateToken(passengerPayload);
+            const res = await request(app)
+                .put("/rides/ride-transition-123/status")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ status: RideStatus.ONGOING });  // Can't go PENDING -> ONGOING
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/only start an accepted/i);
+        });
+    });
 });
 

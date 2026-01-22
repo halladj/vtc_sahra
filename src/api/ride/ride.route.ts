@@ -21,7 +21,11 @@ import { Role, RideStatus, RideType } from "@prisma/client";
 const router = express.Router();
 
 interface AuthenticatedRequest extends Request {
-    payload?: JwtPayload;
+    payload?: JwtPayload & { userId: string; role: Role };
+}
+
+interface CustomError extends Error {
+    statusCode?: number;
 }
 
 /**
@@ -98,8 +102,9 @@ router.post(
                 estimatedPrice,
                 breakdown,
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            const statusCode = (error as CustomError).statusCode || 500;
+            res.status(statusCode).json({ error: error.message });
         }
     }
 );
