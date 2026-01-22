@@ -64,4 +64,15 @@ export class RideEmitter {
     emitError(socketId: string, event: string, message: string, code: string) {
         this.io.to(socketId).emit(RIDE_EVENTS.ERROR, { event, message, code });
     }
+
+    /**
+     * Emit when driver cancels ACCEPTED ride (ride returns to PENDING)
+     */
+    emitDriverCancelled(ride: any) {
+        // Notify the passenger
+        this.io.to(ROOMS.user(ride.userId)).emit(RIDE_EVENTS.DRIVER_CANCELLED, {
+            ride,
+            message: "Driver cancelled. Finding you another driver..."
+        });
+    }
 }

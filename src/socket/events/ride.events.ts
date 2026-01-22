@@ -8,6 +8,7 @@ export const RIDE_EVENTS = {
     ACCEPTED: 'ride:accepted',
     STATUS_UPDATED: 'ride:statusUpdated',
     CANCELLED: 'ride:cancelled',
+    DRIVER_CANCELLED: 'ride:driverCancelled',  // NEW: Driver cancelled, ride back to PENDING
     ERROR: 'ride:error',
 } as const;
 
