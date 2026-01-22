@@ -314,6 +314,23 @@ export async function acceptRide(
         throw new Error("Ride is no longer available");
     }
 
+    // NEW: Check if driver has sufficient balance (10% of ride price for commission)
+    const driverWallet = await db.wallet.findUnique({
+        where: { userId: driverId }
+    });
+
+    if (!driverWallet) {
+        throw new BadRequestError("Driver wallet not found. Please contact support.");
+    }
+
+    const minimumBalance = ride.price * 0.10; // 10% for potential commission
+
+    if (driverWallet.balance < minimumBalance) {
+        throw new BadRequestError(
+            `Insufficient balance. Minimum ${minimumBalance.toLocaleString()} DA required to accept this ride. Current balance: ${driverWallet.balance.toLocaleString()} DA.`
+        );
+    }
+
     // Verify the vehicle belongs to the driver
     const driverProfile = await db.driverProfile.findUnique({
         where: { userId: driverId },
