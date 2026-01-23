@@ -502,9 +502,23 @@ export async function cancelRide(rideId: string, userId: string) {
         await processDriverCancellationPenalty(rideId, ride.driverId, ride.price);
     }
 
-    const cancelledRide = await db.ride.update({
+    // Determine new status and data based on who cancelled and current status
+    let newStatus: RideStatus = RideStatus.CANCELLED;
+    let updateData: any = { status: newStatus };
+
+    // ✅ SPECIAL CASE: Driver cancels ACCEPTED ride → Return to PENDING for auto-match
+    if (ride.driverId === userId && ride.status === RideStatus.ACCEPTED) {
+        newStatus = RideStatus.PENDING;
+        updateData = {
+            status: newStatus,
+            driverId: null,      // Clear driver so other drivers can accept
+            vehicleId: null,     // Clear vehicle assignment
+        };
+    }
+
+    const updatedRide = await db.ride.update({
         where: { id: rideId },
-        data: { status: RideStatus.CANCELLED },
+        data: updateData,
         include: {
             user: {
                 select: {
@@ -528,18 +542,32 @@ export async function cancelRide(rideId: string, userId: string) {
         },
     });
 
-    // Emit ride:cancelled event
+    // Emit appropriate WebSocket events
     try {
         const emitter = getRideEmitter();
-        emitter.emitRideCancelled(cancelledRide);
+
+        if (newStatus === RideStatus.PENDING) {
+            // ✅ Driver cancelled ACCEPTED ride → Special events
+
+            // 1. Notify passenger that driver cancelled (but ride is being re-matched)
+            emitter.emitDriverCancelled(updatedRide);
+
+            // 2. Re-broadcast to all available drivers for re-matching
+            emitter.emitRideCreated(updatedRide);
+
+        } else {
+            // ✅ Regular cancellation (ONGOING → CANCELLED or passenger cancel)
+            emitter.emitRideCancelled(updatedRide);
+        }
     } catch (error) {
         if (process.env.NODE_ENV !== 'test') {
             console.log('WebSocket not available:', error);
         }
     }
 
-    return cancelledRide;
+    return updatedRide;
 }
+
 
 /**
  * Update ride details (before it's accepted)
