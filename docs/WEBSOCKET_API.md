@@ -40,11 +40,12 @@ socket.emitWithAck('ride:updateStatus',
 
 | Event | Who Receives | Data |
 |-------|--------------|------|
-| `ride:created` | All drivers | `{ride: Ride}` - New ride needs driver |
-| `ride:accepted` | Passenger + Driver | `{ride: Ride}` - Driver accepted |
-| `ride:statusUpdated` | Passenger + Driver | `{ride: Ride}` - Status changed |
-| `ride:cancelled` | Passenger + Driver | `{ride: Ride, reason?: string}` |
-| `heartbeat` | All clients | `{timestamp: number}` - Every 30s |
+| `ride:created` | Nearby drivers (10km) | `{ride: Ride, distance: number, estimatedArrival: number}` - New ride or returned to PENDING |
+| `ride:accepted` | Passenger | `{ride: Ride, driver: Driver, vehicle: Vehicle}` - Driver accepted |
+| `ride:statusUpdated` | Passenger + Driver | `{rideId: string, status: string, updatedAt: string}` - Status changed |
+| `ride:driverCancelled` | Passenger | `{rideId: string, message: string}` - Driver cancelled ACCEPTED ride (returns to PENDING) |
+| `ride:cancelled` | Passenger + Driver | `{rideId: string}` - Ride fully cancelled |
+| `location:updated` | Passenger | `{driverId: string, latitude: number, longitude: number, heading?: number, speed?: number}` - Driver location |
 
 ### Client → Server
 
