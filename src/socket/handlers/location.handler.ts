@@ -118,6 +118,7 @@ export const setupLocationHandlers = (io: Server, socket: AuthenticatedSocket) =
                 ...data,
                 timestamp: new Date()
             };
+            // store driver location in memory
             driverLocations.set(driverId, locationData);
 
             // Broadcast to passenger

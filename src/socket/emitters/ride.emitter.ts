@@ -88,12 +88,21 @@ export class RideEmitter {
      */
     emitRideCancelled(ride: any, reason?: string) {
         const rideRoom = ROOMS.ride(ride.id);
+
+        console.log(`🔔 emitRideCancelled called for ride: ${ride.id}`);
+        console.log(`   - Status: ${ride.status}`);
+        console.log(`   - Emitting to ride room: ${rideRoom}`);
+        console.log(`   - Emitting to passenger: ${ROOMS.user(ride.userId)}`);
+
         this.io.to(rideRoom).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
 
         // Also emit to passenger and driver individually
         this.io.to(ROOMS.user(ride.userId)).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
         if (ride.driverId) {
+            console.log(`   - Emitting to driver: ${ROOMS.user(ride.driverId)}`);
             this.io.to(ROOMS.user(ride.driverId)).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
+        } else {
+            console.log(`   - No driver assigned, skipping driver emission`);
         }
     }
 

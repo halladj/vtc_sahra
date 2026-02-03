@@ -548,6 +548,7 @@ export async function cancelRide(rideId: string, userId: string) {
 
         if (newStatus === RideStatus.PENDING) {
             // ✅ Driver cancelled ACCEPTED ride → Special events
+            console.log(`📡 Broadcasting driver cancel (ACCEPTED → PENDING): ${updatedRide.id}`);
 
             // 1. Notify passenger that driver cancelled (but ride is being re-matched)
             emitter.emitDriverCancelled(updatedRide);
@@ -557,9 +558,13 @@ export async function cancelRide(rideId: string, userId: string) {
 
         } else {
             // ✅ Regular cancellation (ONGOING → CANCELLED or passenger cancel)
+            console.log(`📡 Broadcasting ride cancel (${ride.status} → CANCELLED): ${updatedRide.id}`);
+            console.log(`   - Passenger: ${updatedRide.userId}`);
+            console.log(`   - Driver: ${updatedRide.driverId}`);
             emitter.emitRideCancelled(updatedRide);
         }
     } catch (error) {
+        console.error('❌ WebSocket broadcast failed:', error);
         if (process.env.NODE_ENV !== 'test') {
             console.log('WebSocket not available:', error);
         }
