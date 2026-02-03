@@ -48,6 +48,11 @@ Drivers who are "Available" should send their location every 30 seconds to recei
   ```
 - **Behavior**: Used to filter `ride:created` events. Cleared after 5 minutes of inactivity or on disconnect.
 
+#### When to use:
+- **Trigger**: Every 30 seconds when the driver is "Online/Available" but not on a ride.
+- **Purpose**: Allows the server to know which drivers are nearby when a new ride is created.
+- **Stop**: Stop sending this once a ride is `ACCEPTED`.
+
 ### B. Live Ride Tracking (During active ride)
 Once a ride is `ACCEPTED` or `ONGOING`, the driver sends high-frequency updates (every 2-3s).
 
@@ -65,6 +70,11 @@ Once a ride is `ACCEPTED` or `ONGOING`, the driver sends high-frequency updates 
   ```
 - **Event**: `location:updated` (Server → Passenger)
 - **Payload**: Same as above + `timestamp`.
+
+#### When to use:
+- **Trigger**: Every 2-5 seconds only after a ride status is `ACCEPTED` or `ONGOING`.
+- **Purpose**: Real-time map updates for the passenger.
+- **Stop**: Stop sending this once the ride is `COMPLETED` or `CANCELLED`.
 
 ---
 
@@ -144,6 +154,65 @@ npm run ws-test <DRIVER_JWT>
 3. Driver should receive `ride:created` with distance.
 4. Driver Accepts -> Passenger receives `ride:accepted`.
 5. Driver moves -> Passenger receives `location:updated` every few seconds.
+
+---
+
+## 📱 7. Implementation Examples (Flutter)
+
+### A. Driver: Availability Tracking
+```dart
+// Send location every 30s when searching for rides
+Timer? availabilityTimer;
+
+void startAvailabilityTracking() {
+  availabilityTimer = Timer.periodic(Duration(seconds: 30), (_) async {
+    final pos = await Geolocator.getCurrentPosition();
+    socket.emit('driver:locationUpdate', {
+      'latitude': pos.latitude,
+      'longitude': pos.longitude,
+    });
+  });
+}
+
+void stopAvailabilityTracking() {
+  availabilityTimer?.cancel();
+}
+```
+
+### B. Driver: Live Ride Tracking
+```dart
+// Send high-frequency updates during active ride
+Timer? liveTrackingTimer;
+
+void startLiveTracking(String rideId) {
+  liveTrackingTimer = Timer.periodic(Duration(seconds: 3), (_) async {
+    final pos = await Geolocator.getCurrentPosition();
+    socket.emit('location:update', {
+      'rideId': rideId,
+      'latitude': pos.latitude,
+      'longitude': pos.longitude,
+      'heading': pos.heading,
+      'speed': pos.speed,
+    });
+  });
+}
+
+void stopLiveTracking() {
+  liveTrackingTimer?.cancel();
+}
+```
+
+### C. Passenger: Receiving Updates
+```dart
+socket.on('location:updated', (data) {
+  final double lat = data['latitude'];
+  final double lng = data['longitude'];
+  final double? heading = data['heading'];
+  
+  // Update marker on Google Maps
+  updateDriverMarker(lat, lng, heading);
+});
+```
 
 ---
 
