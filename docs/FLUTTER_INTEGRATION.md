@@ -198,12 +198,18 @@ class PassengerService {
       showMessage('${driver['firstName']} is coming!');
     });
     
-    // 2. Listen for driver cancellation
+    // 2. Listen for driver cancellation (ACCEPTED ride)
     socket!.on('ride:driverCancelled', (data) {
       showMessage(data['message']);  // "Finding another driver..."
     });
     
-    // 3. Track driver location
+    // 3. Listen for full cancellation (ONGOING ride or passenger cancel)
+    socket!.on('ride:cancelled', (data) {
+      showMessage('Ride cancelled');
+      // Reset UI to home screen
+    });
+    
+    // 4. Track driver location
     socket!.on('location:updated', (data) {
       updateDriverMarker(
         lat: data['latitude'],
@@ -211,7 +217,7 @@ class PassengerService {
       );
     });
     
-    // 4. Listen for status updates
+    // 5. Listen for status updates
     socket!.on('ride:statusUpdated', (data) {
       if (data['status'] == 'ONGOING') {
         showMessage('Ride started!');

@@ -157,6 +157,51 @@ npm run ws-test <DRIVER_JWT>
 
 ---
 
+## ⚡ 6. Troubleshooting
+
+### Passenger Not Receiving Cancellation Events
+
+**Problem:** Driver cancels but passenger doesn't get notified.
+
+**Solution Checklist:**
+
+1. **Listen to BOTH events:**
+   ```dart
+   // For ACCEPTED rides (driver cancels before starting)
+   socket.on('ride:driverCancelled', (data) { ... });
+   
+   // For ONGOING rides (driver cancels after starting)
+   socket.on('ride:cancelled', (data) { ... });
+   ```
+
+2. **Check authentication:**
+   ```dart
+   socket.emit('authenticate', {
+     'userId': currentUser.id,  // ← Must match ride.userId
+     'role': 'USER'             // ← Must be 'USER' not 'PASSENGER'
+   });
+   ```
+
+3. **Enable debug logging:**
+   ```dart
+   socket.onAny((event, data) {
+     print('📨 Event: $event, Data: $data');
+   });
+   ```
+
+4. **Verify connection:**
+   ```dart
+   socket.onConnect((_) => print('✅ Connected: ${socket.id}'));
+   ```
+
+**Common Mistakes:**
+- ❌ Only listening to `ride:cancelled` (missing `ride:driverCancelled`)
+- ❌ Wrong role: `'PASSENGER'` instead of `'USER'`
+- ❌ Typo: `ride:drivercancelled` (lowercase 'c')
+- ❌ Setting up listeners AFTER the event was emitted
+
+---
+
 ## 📱 7. Implementation Examples (Flutter)
 
 ### A. Driver: Availability Tracking
