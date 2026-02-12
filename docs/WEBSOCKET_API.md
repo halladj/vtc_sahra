@@ -88,7 +88,7 @@ Once a ride is `ACCEPTED` or `ONGOING`, the driver sends high-frequency updates 
 | `ride:accepted` | **Passenger** | Driver accepted. Includes `driver` and `vehicle` details. |
 | `ride:driverCancelled` | **Passenger** | Driver cancelled an **ACCEPTED** ride. Ride returns to PENDING. |
 | `ride:statusUpdated` | **Both** | Ride moved to `ONGOING` (Started) or `COMPLETED`. |
-| `ride:cancelled` | **Both** | Ride fully cancelled (by passenger or by driver during ONGOING). |
+| `ride:cancelled` | **Both (and nearby drivers if PENDING)** | Ride fully cancelled. |
 | `ride:error` | **Sender** | Error message if a command fails. |
 
 ### Client → Server (Emit)
@@ -108,6 +108,15 @@ Once a ride is `ACCEPTED` or `ONGOING`, the driver sends high-frequency updates 
   "ride": { "id": "...", "originLat": 36.7, ... },
   "distance": 1.25,        // km from your current location
   "estimatedArrival": 4   // minutes to pickup
+}
+```
+
+### `ride:cancelled` (For Drivers - PENDING Ride)
+If a user cancels a request before anyone accepts it, nearby drivers receive this to remove it from their list.
+```json
+{
+  "ride": { "id": "...", "status": "PENDING" },
+  "reason": "Client cancelled the request"
 }
 ```
 

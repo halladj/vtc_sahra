@@ -94,15 +94,50 @@ export class RideEmitter {
         console.log(`   - Emitting to ride room: ${rideRoom}`);
         console.log(`   - Emitting to passenger: ${ROOMS.user(ride.userId)}`);
 
+        // 1. Emit to ride room (covers everyone currently joined)
         this.io.to(rideRoom).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
 
-        // Also emit to passenger and driver individually
+        // 2. Always emit to passenger
         this.io.to(ROOMS.user(ride.userId)).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
+
+        // 3. Handle driver notification
         if (ride.driverId) {
-            console.log(`   - Emitting to driver: ${ROOMS.user(ride.driverId)}`);
+            // If driver assigned, notify them specifically
+            console.log(`   - Emitting to assigned driver: ${ROOMS.user(ride.driverId)}`);
             this.io.to(ROOMS.user(ride.driverId)).emit(RIDE_EVENTS.CANCELLED, { ride, reason });
-        } else {
-            console.log(`   - No driver assigned, skipping driver emission`);
+        } else if (ride.status === 'PENDING') {
+            // ✅ NEW: If PENDING (no driver yet), notify nearby drivers who saw the request
+            // This prevents them from trying to accept a cancelled ride
+            console.log(`   - PENDING ride cancelled, notifying nearby drivers to remove from list`);
+            this.notifyNearbyDriversOfCancellation(ride);
+        }
+    }
+
+    /**
+     * Helper to notify nearby drivers that a PENDING ride is cancelled
+     */
+    private notifyNearbyDriversOfCancellation(ride: any) {
+        const driverLocations = getAvailableDriverLocations();
+
+        for (const [driverId, location] of driverLocations.entries()) {
+            const distance = calculateDistance(
+                location.latitude,
+                location.longitude,
+                ride.originLat,
+                ride.originLng
+            );
+
+            if (distance <= this.MAX_BROADCAST_DISTANCE_KM) {
+                // Emit cancelled event to driver so they can remove it from their list
+                this.io.to(ROOMS.user(driverId)).emit(RIDE_EVENTS.CANCELLED, {
+                    ride,
+                    reason: "Client cancelled the request"
+                });
+            }
+        }
+
+        if (process.env.NODE_ENV !== 'test') {
+            console.log(`   - Broadcasted cancellation to nearby drivers within ${this.MAX_BROADCAST_DISTANCE_KM}km`);
         }
     }
 
