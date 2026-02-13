@@ -118,6 +118,9 @@ export class RideEmitter {
      */
     private notifyNearbyDriversOfCancellation(ride: any) {
         const driverLocations = getAvailableDriverLocations();
+        console.log(`🔍 notifyNearbyDriversOfCancellation: Found ${driverLocations.size} available drivers`);
+
+        let notifiedCount = 0;
 
         for (const [driverId, location] of driverLocations.entries()) {
             const distance = calculateDistance(
@@ -127,17 +130,21 @@ export class RideEmitter {
                 ride.originLng
             );
 
+            console.log(`   - Driver ${driverId} is ${distance.toFixed(2)}km away (Limit: ${this.MAX_BROADCAST_DISTANCE_KM}km)`);
+
             if (distance <= this.MAX_BROADCAST_DISTANCE_KM) {
                 // Emit cancelled event to driver so they can remove it from their list
+                console.log(`   - 📢 Notifying driver ${driverId} of cancellation`);
                 this.io.to(ROOMS.user(driverId)).emit(RIDE_EVENTS.CANCELLED, {
                     ride,
                     reason: "Client cancelled the request"
                 });
+                notifiedCount++;
             }
         }
 
         if (process.env.NODE_ENV !== 'test') {
-            console.log(`   - Broadcasted cancellation to nearby drivers within ${this.MAX_BROADCAST_DISTANCE_KM}km`);
+            console.log(`   - Broadcasted cancellation to ${notifiedCount} nearby drivers within ${this.MAX_BROADCAST_DISTANCE_KM}km`);
         }
     }
 
