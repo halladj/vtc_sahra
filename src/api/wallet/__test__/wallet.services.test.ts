@@ -4,6 +4,8 @@ import {
     createWallet,
     findWalletByUserId,
     getWalletBalance,
+    addTransaction,
+    getTransactionHistory,
     creditWallet,
     debitWallet,
 } from "../wallet.services";
@@ -255,6 +257,106 @@ describe("Wallet Services", () => {
             await expect(debitWallet("nonexistent-user", 500)).rejects.toThrow(
                 "Wallet not found"
             );
+        });
+    });
+
+    describe("addTransaction", () => {
+        it("should create a credit transaction with reference", async () => {
+            const mockTransaction = {
+                id: "tx-123",
+                walletId: "wallet-123",
+                type: TransactionType.CREDIT,
+                amount: 1000,
+                reference: "Top-up",
+                createdAt: new Date(),
+            };
+
+            (db.transaction.create as jest.Mock).mockResolvedValue(mockTransaction);
+
+            const result = await addTransaction(
+                "wallet-123",
+                TransactionType.CREDIT,
+                1000,
+                "Top-up"
+            );
+
+            expect(result).toEqual(mockTransaction);
+            expect(db.transaction.create).toHaveBeenCalledWith({
+                data: {
+                    walletId: "wallet-123",
+                    type: TransactionType.CREDIT,
+                    amount: 1000,
+                    reference: "Top-up",
+                },
+            });
+        });
+
+        it("should create a debit transaction without reference (null)", async () => {
+            const mockTransaction = {
+                id: "tx-456",
+                walletId: "wallet-123",
+                type: TransactionType.DEBIT,
+                amount: 500,
+                reference: null,
+                createdAt: new Date(),
+            };
+
+            (db.transaction.create as jest.Mock).mockResolvedValue(mockTransaction);
+
+            const result = await addTransaction(
+                "wallet-123",
+                TransactionType.DEBIT,
+                500
+            );
+
+            expect(result.reference).toBeNull();
+            expect(db.transaction.create).toHaveBeenCalledWith({
+                data: {
+                    walletId: "wallet-123",
+                    type: TransactionType.DEBIT,
+                    amount: 500,
+                    reference: null,
+                },
+            });
+        });
+    });
+
+    describe("getTransactionHistory", () => {
+        it("should return transactions ordered by date descending", async () => {
+            const mockTransactions = [
+                {
+                    id: "tx-2",
+                    walletId: "wallet-123",
+                    type: TransactionType.DEBIT,
+                    amount: 200,
+                    createdAt: new Date("2024-02-01"),
+                },
+                {
+                    id: "tx-1",
+                    walletId: "wallet-123",
+                    type: TransactionType.CREDIT,
+                    amount: 1000,
+                    createdAt: new Date("2024-01-01"),
+                },
+            ];
+
+            (db.transaction.findMany as jest.Mock).mockResolvedValue(mockTransactions);
+
+            const result = await getTransactionHistory("wallet-123");
+
+            expect(result).toEqual(mockTransactions);
+            expect(db.transaction.findMany).toHaveBeenCalledWith({
+                where: { walletId: "wallet-123" },
+                orderBy: { createdAt: "desc" },
+            });
+        });
+
+        it("should return empty array when no transactions exist", async () => {
+            (db.transaction.findMany as jest.Mock).mockResolvedValue([]);
+
+            const result = await getTransactionHistory("wallet-123");
+
+            expect(result).toEqual([]);
         });
     });
 });
