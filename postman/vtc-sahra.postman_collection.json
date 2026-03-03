@@ -97,7 +97,24 @@
 						},
 						"description": "Credit a user's wallet (Admin only). Amount in cents (50000 = 500 DA)"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Wallet balance updated', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('wallet');",
+									"    pm.expect(body.wallet).to.have.property('balance');",
+									"    pm.expect(body.transaction.type).to.eql('CREDIT');",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Debit Wallet (Admin)",
@@ -132,7 +149,23 @@
 						},
 						"description": "Debit a user's wallet (Admin only). Amount in cents (10000 = 100 DA)"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Wallet debited successfully', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('wallet');",
+									"    pm.expect(body.transaction.type).to.eql('DEBIT');",
+									"});"
+								]
+							}
+						}
+					]
 				}
 			]
 		},
@@ -148,16 +181,16 @@
 								{
 									"listen": "test",
 									"script": {
+										"type": "text/javascript",
 										"exec": [
 											"if (pm.response.code === 200) {",
 											"    const response = pm.response.json();",
 											"    pm.collectionVariables.set('adminToken', response.accessToken);",
-											"    pm.test('Login successful', function() {",
+											"    pm.test('Login successful - adminToken saved', function() {",
 											"        pm.expect(response.accessToken).to.be.a('string');",
 											"    });",
 											"}"
-										],
-										"type": "text/javascript"
+										]
 									}
 								}
 							],
@@ -223,7 +256,24 @@
 								},
 								"description": "Create a new admin account. Requires admin authentication."
 							},
-							"response": []
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('Status 201 - Admin created', function() {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"pm.test('Admin role is ADMIN', function() {",
+											"    const body = pm.response.json();",
+											"    pm.expect(body.admin.role).to.eql('ADMIN');",
+											"});"
+										]
+									}
+								}
+							]
 						}
 					]
 				},
@@ -1195,7 +1245,28 @@
 						},
 						"description": "Create a gift card (Admin only). Code is optional - auto-generated if not provided. Amount in cents."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201 - Gift card created', function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test('Response has code and amount', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('code');",
+									"    pm.expect(body).to.have.property('amount');",
+									"    pm.expect(body.isUsed).to.be.false;",
+									"    // Save code for later use",
+									"    pm.collectionVariables.set('giftCardCode', body.code);",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Get All Gift Cards (Admin)",
@@ -1221,7 +1292,22 @@
 						},
 						"description": "Get all gift cards (Admin only). Shows unused cards first."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Returns an array of gift cards', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Get Gift Card by Code (Admin)",
@@ -1248,7 +1334,23 @@
 						},
 						"description": "Get specific gift card details (Admin only)"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Returns correct gift card', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('code');",
+									"    pm.expect(body).to.have.property('amount');",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Redeem Gift Card",
@@ -1283,7 +1385,26 @@
 						},
 						"description": "Redeem a gift card. Credits the authenticated user's wallet."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200 - Redeemed', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response confirms redemption', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body.message).to.include('redeemed');",
+									"    pm.expect(body.wallet).to.have.property('balance');",
+									"    pm.expect(body.giftCard).to.have.property('usedAt');",
+									"});"
+								]
+							}
+						}
+					]
 				}
 			]
 		},
@@ -1736,7 +1857,26 @@
 						},
 						"description": "Rate a completed ride. Only the passenger can rate. Score must be 1-5 stars."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201 - Rating created', function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test('Response has score and rideId', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('score');",
+									"    pm.expect(body).to.have.property('rideId');",
+									"    pm.expect(body.score).to.be.within(1, 5);",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Get Rating for Ride",
@@ -1764,7 +1904,22 @@
 						},
 						"description": "Get rating for a specific ride. Only accessible by passenger or driver of the ride."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Returns a rating object', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('score');",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Get Driver Ratings",
@@ -1792,7 +1947,21 @@
 						},
 						"description": "Get all ratings for a specific driver. Returns array of ratings with ride details."
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Returns an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
 				},
 				{
 					"name": "Get Driver Average Rating",
@@ -1821,7 +1990,24 @@
 						},
 						"description": "Get driver's average rating and total count. Returns { average: 4.5, count: 10 }"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Returns average and count', function() {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property('average');",
+									"    pm.expect(body).to.have.property('count');",
+									"    pm.expect(body.average).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					]
 				}
 			]
 		}
@@ -1882,6 +2068,18 @@
 		},
 		{
 			"key": "adminToken",
+			"value": ""
+		},
+		{
+			"key": "passengerToken",
+			"value": ""
+		},
+		{
+			"key": "giftCardCode",
+			"value": ""
+		},
+		{
+			"key": "driverId",
 			"value": ""
 		}
 	]
