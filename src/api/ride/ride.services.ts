@@ -148,6 +148,7 @@ export async function getRidesForUser(userId: string, status?: RideStatus) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
         orderBy: {
             createdAt: "desc",
@@ -177,6 +178,7 @@ export async function getCurrentRidesForUser(userId: string) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
         orderBy: {
             createdAt: "desc",
@@ -207,6 +209,7 @@ export async function getCurrentRide(userId: string) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
         orderBy: {
             createdAt: "desc",
@@ -238,6 +241,7 @@ export async function getCurrentRideForDriver(driverId: string) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
         orderBy: {
             createdAt: "desc",
@@ -261,6 +265,7 @@ export async function getRidesForDriver(driverId: string, status?: RideStatus) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
         orderBy: {
             createdAt: "desc",
@@ -405,6 +410,7 @@ export async function acceptRide(
                 },
             },
             vehicle: true,
+            ratings: true,
         },
     });
 
@@ -476,6 +482,7 @@ export async function updateRideStatus(
                 },
             },
             vehicle: true,
+            ratings: true,
         },
     });
 
@@ -568,6 +575,7 @@ export async function cancelRide(rideId: string, userId: string) {
                 },
             },
             vehicle: true,
+            ratings: true,
         },
     });
 
@@ -652,6 +660,7 @@ export async function updateRide(
                     photo: true,
                 },
             },
+            ratings: true,
         },
     });
 }
