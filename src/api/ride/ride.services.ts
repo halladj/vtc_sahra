@@ -3,6 +3,7 @@ import { db } from "../../utils/db";
 import { processDriverCommission, processDriverCancellationPenalty } from "./ride.payment.services";
 import { estimateRidePrice } from "./ride.pricing.services";
 import { getRideEmitter } from "../../socket";
+import { reverseGeocode } from "../../utils/geocoding";
 import { UnauthorizedError, NotFoundError, BadRequestError } from "../../utils/errors";
 
 /**
@@ -54,14 +55,22 @@ export async function createRide(data: {
         destLng: data.destLng,
     });
 
+    // Attempt to reverse geocode addresses (done in parallel for speed)
+    const [originAddress, destAddress] = await Promise.all([
+        reverseGeocode(data.originLat, data.originLng),
+        reverseGeocode(data.destLat, data.destLng)
+    ]);
+
     const ride = await db.ride.create({
         data: {
             userId: data.userId,
             type: data.type,
             originLat: data.originLat,
             originLng: data.originLng,
+            originAddress: originAddress,
             destLat: data.destLat,
             destLng: data.destLng,
+            destAddress: destAddress,
             distanceKm: data.distanceKm ?? null,
             durationMin: data.durationMin ?? null,
             price: finalPrice,

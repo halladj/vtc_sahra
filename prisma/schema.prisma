@@ -228,8 +228,10 @@ model Ride {
 
   originLat     Float    // origin latitude
   originLng     Float    // origin longitude
+  originAddress String?  // origin physical address
   destLat       Float    // destination latitude
   destLng       Float    // destination longitude
+  destAddress   String?  // destination physical address
   distanceKm    Float?   // computed when booking
   durationMin   Float?   // estimated duration
   price         Int      // final price in credits

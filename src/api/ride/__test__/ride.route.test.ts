@@ -36,9 +36,15 @@ jest.mock("../ride.payment.services", () => ({
     processDriverCancellationPenalty: jest.fn(),
 }));
 
+// Mock geocoding utility BEFORE importing the router
+jest.mock("../../../utils/geocoding", () => ({
+    reverseGeocode: jest.fn(),
+}));
+
 import { db } from "../../../utils/db";
 import rideRouter from "../ride.route";
 import * as paymentServices from "../ride.payment.services";
+import * as geocodingServices from "../../../utils/geocoding";
 
 // Mock environment
 process.env.JWT_ACCESS_SECRET = "testsecret";
@@ -73,16 +79,23 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             destLng: 3.0700,
         };
 
-        it("should create ride with valid coordinates", async () => {
+        it("should create ride with valid coordinates and trigger reverse geocode", async () => {
             const mockRide = {
                 id: "ride-123",
                 ...validRideData,
+                originAddress: "Mocked Origin Address",
+                destAddress: "Mocked Dest Address",
                 userId: passengerPayload.userId,
                 status: RideStatus.PENDING,
                 user: { id: passengerPayload.userId, firstName: "John" },
             };
 
             (db.ride.create as jest.Mock).mockResolvedValue(mockRide);
+            (geocodingServices.reverseGeocode as jest.Mock).mockImplementation((lat, lng) => {
+                if (lat === 36.7538) return Promise.resolve("Mocked Origin Address");
+                if (lat === 36.7650) return Promise.resolve("Mocked Dest Address");
+                return Promise.resolve(null);
+            });
 
             const token = generateToken(passengerPayload);
             const res = await request(app)
@@ -94,6 +107,9 @@ describe("Ride Routes - Coordinate Based Locations", () => {
             expect(res.body.id).toBe("ride-123");
             expect(res.body.originLat).toBe(36.7538);
             expect(res.body.destLng).toBe(3.0700);
+            expect(res.body.originAddress).toBe("Mocked Origin Address");
+            expect(res.body.destAddress).toBe("Mocked Dest Address");
+            expect(geocodingServices.reverseGeocode).toHaveBeenCalledTimes(2);
         });
 
         it("should reject invalid latitude (out of range)", async () => {
