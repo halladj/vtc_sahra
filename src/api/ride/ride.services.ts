@@ -270,9 +270,14 @@ export async function getRidesForDriver(driverId: string, status?: RideStatus) {
 
 /**
  * Get all pending rides (for drivers to accept)
+ * Filtered by distance (MAX_RIDE_BROADCAST_DISTANCE_KM)
  */
-export async function getPendingRides() {
-    return db.ride.findMany({
+export async function getPendingRides(
+    driverLat: number,
+    driverLng: number,
+    radiusKm: number = Number(process.env.MAX_RIDE_BROADCAST_DISTANCE_KM) || 10
+) {
+    const rides = await db.ride.findMany({
         where: {
             status: RideStatus.PENDING,
         },
@@ -291,6 +296,30 @@ export async function getPendingRides() {
             createdAt: "desc",
         },
     });
+
+    // Import distance utilities
+    const { calculateDistance, estimateTravelTime } = require("../../utils/distance");
+
+    const nearbyRides = [];
+
+    for (const ride of rides) {
+        const distance = calculateDistance(
+            driverLat,
+            driverLng,
+            ride.originLat,
+            ride.originLng
+        );
+
+        if (distance <= radiusKm) {
+            nearbyRides.push({
+                ...ride,
+                distance: Number(distance.toFixed(2)),
+                estimatedArrival: estimateTravelTime(distance)
+            });
+        }
+    }
+
+    return nearbyRides;
 }
 
 /**

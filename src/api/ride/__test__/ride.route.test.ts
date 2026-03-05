@@ -765,6 +765,74 @@ describe("Ride Routes - Coordinate Based Locations", () => {
         });
     });
 
+    describe("GET /rides/pending - Geo-filter", () => {
+        beforeEach(() => {
+            const pendingRides = [
+                { id: "ride-close", status: RideStatus.PENDING, originLat: 36.75, originLng: 3.05 },
+                { id: "ride-far", status: RideStatus.PENDING, originLat: 36.85, originLng: 3.15 },
+            ];
+            (db.ride.findMany as jest.Mock).mockResolvedValue(pendingRides);
+        });
+
+        it("should reject request without lat/lng coordinates (400 Bad Request)", async () => {
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .get("/rides/pending")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toContain("lat and lng query parameters are required");
+        });
+
+        it("should reject invalid non-numeric coordinates (400 Bad Request)", async () => {
+            const token = generateToken(driverPayload);
+            const res = await request(app)
+                .get("/rides/pending?lat=abc&lng=def")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toContain("valid numbers");
+        });
+
+        it("should filter out rides > 10km away by default", async () => {
+            const token = generateToken(driverPayload);
+            // Driver location close to "ride-close"
+            const res = await request(app)
+                .get("/rides/pending?lat=36.7501&lng=3.0501")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toHaveLength(1);
+            expect(res.body[0].id).toBe("ride-close");
+
+            // Should add distance and ETA keys
+            expect(res.body[0]).toHaveProperty("distance");
+            expect(res.body[0]).toHaveProperty("estimatedArrival");
+        });
+
+        it("should respect custom radiusKm query parameter", async () => {
+            const token = generateToken(driverPayload);
+            // Even though ride-far is far, we set a massive radius of 50km
+            const res = await request(app)
+                .get("/rides/pending?lat=36.75&lng=3.05&radiusKm=50")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toHaveLength(2);
+        });
+
+        it("should return empty array if no rides within radius", async () => {
+            const token = generateToken(driverPayload);
+            // Driver is very far away
+            const res = await request(app)
+                .get("/rides/pending?lat=40.0&lng=4.0")
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body).toHaveLength(0);
+        });
+    });
+
     describe("Authorization - Ride Updates", () => {
         const otherUserPayload = { userId: "other-user-789", role: Role.USER };
 

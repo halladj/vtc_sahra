@@ -199,7 +199,8 @@ router.post(
 );
 
 /**
- * GET /rides/pending - Get all pending rides (drivers only)
+ * GET /rides/pending - Get nearby pending rides (drivers only)
+ * Requires ?lat=XX&lng=YY
  */
 router.get(
     "/pending",
@@ -207,7 +208,25 @@ router.get(
     requireRole(Role.DRIVER),
     async (req: AuthenticatedRequest, res: Response, next: any) => {
         try {
-            const rides = await getPendingRides();
+            const { lat, lng, radiusKm } = req.query;
+
+            if (!lat || !lng) {
+                return res.status(400).json({ error: "lat and lng query parameters are required" });
+            }
+
+            const driverLat = parseFloat(lat as string);
+            const driverLng = parseFloat(lng as string);
+
+            if (isNaN(driverLat) || isNaN(driverLng)) {
+                return res.status(400).json({ error: "lat and lng must be valid numbers" });
+            }
+
+            const radius = radiusKm ? parseFloat(radiusKm as string) : undefined;
+            if (radiusKm && isNaN(radius!)) {
+                return res.status(400).json({ error: "radiusKm must be a valid number" });
+            }
+
+            const rides = await getPendingRides(driverLat, driverLng, radius);
             res.json(rides);
         } catch (error: any) {
             const statusCode = (error as CustomError).statusCode || 500;
