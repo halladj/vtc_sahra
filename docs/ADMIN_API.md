@@ -203,6 +203,50 @@ Returns all gift cards, unused ones listed first.
 
 ---
 
+### 2d. Gift Card Redemption (User Route)
+
+#### `POST /api/giftcards/redeem` — Redeem a Gift Card
+
+> **Auth**: Any authenticated user
+
+**Request Body**
+```json
+{
+  "code": "PROMO-EID25"
+}
+```
+
+**Success Response** — `200 OK`
+```json
+{
+  "message": "Gift card redeemed successfully",
+  "giftCard": {
+    "code": "PROMO-EID25",
+    "amount": 5000,
+    "usedAt": "2026-03-03T14:00:00.000Z"
+  },
+  "wallet": {
+    "balance": 12000
+  },
+  "transaction": { 
+    "id": "tx-xyz", 
+    "type": "CREDIT",
+    "amount": 5000, 
+    "createdAt": "..."
+  }
+}
+```
+
+**Error Responses**
+
+| Status | Condition |
+|--------|-----------|
+| `400` | Missing `code` |
+| `400` | Gift card not found |
+| `400` | Gift card already used |
+
+---
+
 ## 💰 3. Wallet Management
 
 ### `POST /api/wallet/credit` — Credit a User's Wallet
