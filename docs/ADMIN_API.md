@@ -128,6 +128,72 @@ Non-admin access returns `403 Forbidden`.
 
 ---
 
+### 1c. Admin Profile Management
+
+#### `GET /api/users/profile` — Get Own Admin Profile
+
+> **Auth**: Any authenticated user
+
+**Success Response** — `200 OK`
+```json
+{
+  "id": "admin-xyz",
+  "email": "admin@vtc.dz",
+  "firstName": "Nour",
+  "lastName": "Benali",
+  "role": "ADMIN",
+  "photo": "http://localhost:3000/uploads/users/photo-123.jpg",
+  "phoneNumber": "+213555999999",
+  "sex": "MALE",
+  "dateOfBirth": "1990-01-15",
+  "address": "Rue Didouche Mourad",
+  "wilaya": "Alger",
+  "commune": "Hussein Dey",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+---
+
+#### `PUT /api/users/profile` — Update Own Profile
+
+> **Auth**: Any authenticated user
+
+**Request Body**
+```json
+{
+  "firstName": "Nour",
+  "lastName": "Benali-Amrani",
+  "phoneNumber": "+213555888888",
+  "wilaya": "Oran"
+}
+```
+
+**Success Response** — `200 OK` (returns updated profile object)
+
+---
+
+#### `PUT /api/users/photo` — Update Profile Photo
+
+> **Auth**: Any authenticated user
+
+> **Content-Type**: `multipart/form-data`
+
+**Request Body**
+- `photo`: File (image)
+
+**Success Response** — `200 OK`
+```json
+{
+  "id": "admin-xyz",
+  "photo": "http://localhost:3000/uploads/users/new-photo.jpg",
+  ...
+}
+```
+
+---
+
 ## 🎁 2. Gift Card Management
 
 ### `POST /api/giftcards` — Create a Gift Card
@@ -340,9 +406,12 @@ Returns all gift cards, unused ones listed first.
 |--------|----------|------|-------------|
 | `POST` | `/api/auth/register-admin` | `ADMIN` | Create a new admin account |
 | `POST` | `/api/auth/register-driver` | Public | Register a driver account |
+| `GET`  | `/api/users/profile` | Any auth user | Get own admin profile |
+| `PUT`  | `/api/users/profile` | Any auth user | Update own profile |
+| `PUT`  | `/api/users/photo` | Any auth user | Update profile photo |
 | `POST` | `/api/giftcards` | `ADMIN` | Create a gift card |
-| `GET` | `/api/giftcards` | `ADMIN` | List all gift cards |
-| `GET` | `/api/giftcards/:code` | `ADMIN` | Get gift card by code |
+| `GET`  | `/api/giftcards` | `ADMIN` | List all gift cards |
+| `GET`  | `/api/giftcards/:code` | `ADMIN` | Get gift card by code |
 | `POST` | `/api/wallet/credit` | `ADMIN` | Credit a user's wallet |
 | `POST` | `/api/wallet/debit` | `ADMIN` | Debit a user's wallet |
 
