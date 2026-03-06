@@ -354,6 +354,8 @@ Returns all gift cards, unused ones listed first.
 
 ---
 
+---
+
 ## 🧪 5. Test Coverage
 
 Admin-related routes are covered by automated tests (Jest + Supertest) with mocked databases.
@@ -368,5 +370,20 @@ npx jest --testPathPatterns="giftcard|wallet|auth|middleware" --coverage
 
 ---
 
-**Version**: 1.0.0  
+## 🏗️ 6. Seeded Data (Development)
+
+The following default accounts are available after running `npm run seed`:
+
+| Role | Email | Password | Phone |
+|------|-------|----------|-------|
+| **ADMIN** | `admin@vtc.dz` | `password123` | `+213555000001` |
+| **USER** | `user1@vtc.dz` | `password123` | `+213555000002` |
+| **DRIVER** | `driver1@vtc.dz` | `password123` | `+213555000011` |
+
+> **Note**: All seeded users have an initial wallet balance of **1,000 DA** (100,000 credits).
+
+---
+
+**Version**: 1.0.1  
 **Last Updated**: March 2026
+
