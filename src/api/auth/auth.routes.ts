@@ -286,8 +286,15 @@ router.post("/forgot-password", async (req, res, next) => {
 
 router.post("/reset-password", async (req, res, next) => {
   try {
+    const { token, newPassword, confirmPassword } = req.body;
 
-    const { token, newPassword } = req.body;
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({ error: "New password and confirmation are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
 
     const resetToken = await findPasswordResetToken(token);
     if (!resetToken) {
@@ -298,32 +305,66 @@ router.post("/reset-password", async (req, res, next) => {
       return res.status(400).json({ error: "Token expired" });
     }
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
     const user = await findUserById(resetToken.userId);
-    const pwd = user?.password;
-    const isSamePassword = await bcrypt.compare(
-      newPassword,
-      pwd ? pwd : ""
-    );
-    if (isSamePassword) {
-      return res.status(400).json({
-        error: "Must use a different password`"
-      });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    await updateUsersPassword(
-      resetToken.userId, hashedPassword
-    );
-    // remove token so it can’t be reused
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ error: "New password must be different from the old one" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await updateUsersPassword(resetToken.userId, hashedPassword);
     await deletePasswordResetToken(token);
 
     res.json({ message: "Password reset successfully" });
-  }
-  catch (err) {
-    next(err)
+  } catch (err) {
+    next(err);
   }
 });
+
+/**
+ * Change Password (Authenticated)
+ * Requires oldPassword, newPassword, and confirmPassword
+ */
+router.post("/change-password", isAuthenticated, async (req: any, res, next) => {
+  try {
+    const { userId } = req.payload;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ error: "All password fields are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: "New passwords do not match" });
+    }
+
+    const user = await findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    if (!isOldPasswordCorrect) {
+      return res.status(403).json({ error: "Invalid old password" });
+    }
+
+    if (oldPassword === newPassword) {
+      return res.status(400).json({ error: "New password must be different from the old one" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await updateUsersPassword(userId, hashedPassword);
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 /**
  * Register a new admin user (Admin only)

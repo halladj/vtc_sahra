@@ -443,7 +443,7 @@ describe("POST /auth/reset-password", () => {
 
         const res = await request(app)
             .post("/auth/reset-password")
-            .send({ token: "valid-reset-token", newPassword: "NewPassword456!" });
+            .send({ token: "valid-reset-token", newPassword: "NewPassword456!", confirmPassword: "NewPassword456!" });
 
         expect(res.status).toBe(200);
         expect(res.body.message).toBe("Password reset successfully");
@@ -456,7 +456,7 @@ describe("POST /auth/reset-password", () => {
 
         const res = await request(app)
             .post("/auth/reset-password")
-            .send({ token: "invalid-token", newPassword: "NewPassword456!" });
+            .send({ token: "invalid-token", newPassword: "NewPassword456!", confirmPassword: "NewPassword456!" });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toBe("Invalid token");
@@ -472,7 +472,7 @@ describe("POST /auth/reset-password", () => {
 
         const res = await request(app)
             .post("/auth/reset-password")
-            .send({ token: "expired-token", newPassword: "NewPassword456!" });
+            .send({ token: "expired-token", newPassword: "NewPassword456!", confirmPassword: "NewPassword456!" });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toBe("Token expired");
@@ -494,9 +494,9 @@ describe("POST /auth/reset-password", () => {
 
         const res = await request(app)
             .post("/auth/reset-password")
-            .send({ token: "valid-reset-token", newPassword: "SamePassword123!" });
+            .send({ token: "valid-reset-token", newPassword: "SamePassword123!", confirmPassword: "SamePassword123!" });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toContain("different password");
+        expect(res.body.error).toContain("must be different from the old one");
     });
 });
